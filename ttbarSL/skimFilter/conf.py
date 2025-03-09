@@ -13,8 +13,8 @@ process.source = cms.Source("PoolSource",
 )
 # MC truth matching for muons
 process.muonMCMatch = cms.EDProducer("MCMatcher",
-    src         = cms.InputTag("muons"),       # reco muons
-    matched     = cms.InputTag("genParticles"),  # gen particles
+    src         = cms.InputTag("slimmedMuons"),       # reco muons
+    matched     = cms.InputTag("prunedGenParticles"),  # gen particles
     mcPdgId     = cms.vint32(13),             # Muon PDG ID
     checkCharge = cms.bool(True),             # Check charge match
     maxDeltaR   = cms.double(0.3),            # ΔR threshold
@@ -24,18 +24,19 @@ process.muonMCMatch = cms.EDProducer("MCMatcher",
     mcStatus    = cms.vint32(1)               # Match only stable particles
 )
 
-# Skim filter (trigger filtering only)
+# Skim filter
 process.skimFilter = cms.EDFilter('skimFilter',
     triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
     HLT_IsoMu24_v=cms.string("HLT_IsoMu24_v"),
     HLT_Ele32_WPTight_Gsf_v=cms.string("HLT_Ele32_WPTight_Gsf_v"),
-
+    muons = cms.InputTag("slimmedMuons"),
+    electrons = cms.InputTag("slimmedElectrons")
 )
 
 # Path configuration
 process.p = cms.Path(
-#    process.muonMCMatch +  # MC truth matching
-    process.skimFilter           # Trigger filter
+    process.skimFilter +          # Trigger filter
+    process.muonMCMatch  # MC truth matching
 )
 
 # Output module to store matched information
@@ -48,12 +49,12 @@ process.out = cms.OutputModule("PoolOutputModule",
         'drop *',
         'keep patMuons_slimmedMuons__*',         # Store all reco muons
         'keep patJets_slimmedJetsPuppi__PAT*',   # Store MC matching results
-        'keep *EventAuxiliary*',
+        'keep edmEventAuxiliary_*_*_*',
         # Keep gen-level particles
         'keep recoGenParticles_prunedGenParticles__PAT*',
-        'keep recoGenJets_slimmedGenJets__PAT*'  
+        'keep recoGenJets_slimmedGenJets__PAT*', 
         'keep genWeights_genWeight__*',
-        'keep recoGenParticlesedmAssociation_muonMCMatch*',
+        'keep recoGenParticlesedmAssociation_muonMCMatch__skim*',
         'keep GenEventInfoProduct_generator__*'
     )
 )

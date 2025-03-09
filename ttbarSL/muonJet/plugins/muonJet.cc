@@ -9,8 +9,8 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h" 
-#include "DataFormats/MuonReco/interface/Muon.h"
-#include "DataFormats/MuonReco/interface/MuonFwd.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+
 #include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/MuonReco/interface/MuonSelectors.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
@@ -34,13 +34,11 @@ private:
   void endJob() override;
 
   // ----------member data ---------------------------
-  edm::EDGetTokenT<pat::ElectronCollection> electronToken_;
   edm::EDGetTokenT<pat::MuonCollection> muonToken_;
   edm::EDGetTokenT<pat::JetCollection> jetToken_;
   edm::EDGetTokenT<reco::GenParticleCollection> genParticleToken_;
   edm::EDGetTokenT<reco::GenJetCollection> genJetToken_;
   edm::EDGetTokenT<GenEventInfoProduct> generatorToken_;
-  edm::EDGetTokenT<edm::Association<reco::GenParticleCollection>> muonMCMatchToken_;
 
   std::vector<short> Muon_charge;
   std::vector<double> Muon_pt;
@@ -78,13 +76,11 @@ private:
 
 
 muonJet::muonJet(const edm::ParameterSet& iConfig)
-  : electronToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons")))
-    muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
+  : muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
     jetToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
     genParticleToken_(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("genParticles"))),
     genParticleToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("genJets"))),  
-    generatorToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("generator"))),
-    muonMCMatchToken_(consumes<edm::Association<reco::GenParticleCollection>>(iConfig.getParameter<edm::InputTag>("muonMCMatch"))) {
+    generatorToken_(consumes<GenEventInfoProduct>(iConfig.getParameter<edm::InputTag>("generator"))){
 }
 
 
@@ -152,12 +148,10 @@ void muonJet::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   //The following says we do not know what parameters are allowed so do no validation
   // Please change this to state exactly what you do use, even if it is no parameters
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("electrons", edm::InputTag("electrons"));
   desc.add<edm::InputTag>("muons", edm::InputTag("muons"));
-  desc.add<edm::InputTag>("muons", edm::InputTag("muons"));
+  desc.add<edm::InputTag>("jets", edm::InputTag("jets"));
   desc.add<edm::InputTag>("genParticles", edm::InputTag("genParticles"));
   desc.add<edm::InputTag>("generator", edm::InputTag("generator"));
-  desc.add<edm::InputTag>("muonMCMatch", edm::InputTag("muonMCMatch"));
   descriptions.add("muonJet", desc);
   //Specify that only 'tracks' is allowed
   //To use, remove the default given above and uncomment below
