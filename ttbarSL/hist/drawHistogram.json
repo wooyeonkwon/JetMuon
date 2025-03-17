@@ -1,0 +1,52 @@
+{
+    "0" : 
+    {
+        "discription": "drawing histogram",
+        "input_path": "/home/dndus0107/JetMuon/run/ttbarSLJetMuon_skim/mc/Run3Summer23BPixNanoAODv12/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/NANOAODSIM/130X_mcRun3_2023_realistic_postBPix_v2-v3/ttbarSL_ttbarSLJetMuonSkim.root",
+        "output_path": "./test",
+        "json_config":"./drawHistogramBasicInfoConfig.json"
+    },
+
+    "1" : 
+    {
+        "discription": "drawing comparision histogram with ratio",
+        "input_path": "/data1/users/dndus0107/skimmed_data/WWtoLNu2Q_Run3Summer22MiniAOD.root",
+        "input_path2":"/data1/users/dndus0107/skimmed_data/WWtoLNu2Q_Run3Summer22MiniAOD.root",
+        "output_path": "./WWtoLNu2Q_DataMC",
+        "json_config":"drawDataMCHistogramConfig.json"
+    },
+
+    "2" :
+    {
+        "discription": "drawing profile, mean graph for each bin",
+        "input_path": "",
+        "output_path": "",
+        "json_config":""
+    },
+
+    "3" : 
+    {
+        "discription": "drawing multiple histogram in one canvas",
+        "input_path": "",
+        "output_path": "",
+        "json_config":""
+    },
+
+    "4" :
+        {
+        "discription": "drawing comparision multiple histogram with ratio in one canvas",
+        "input_path": "",
+        "input_path2":"",
+        "output_path": "",
+        "json_config":""
+        },
+
+    "5" :
+        {
+        "discription": "drawing multiple profile, mean graph for each bin in one canvas",
+        "input_path": "",
+        "output_path": "",
+        "json_config":""
+        }
+    
+}

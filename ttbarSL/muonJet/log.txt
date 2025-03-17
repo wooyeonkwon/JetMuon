@@ -1,0 +1,25 @@
+>> Local Products Rules ..... started
+>> Local Products Rules ..... done
+>> Entering Package ttbarSL/muonJet
+>> Creating project symlinks
+>> Compiling edm plugin src/ttbarSL/muonJet/plugins/muonJet.cc
+>> Building edm plugin tmp/slc7_amd64_gcc12/src/ttbarSL/muonJet/plugins/muonJet/libmuonJet.so
+Leaving library rule at src/ttbarSL/muonJet/plugins
+@@@@ Running edmWriteConfigs for muonJet
+muonJet
+--- Registered EDM Plugin: muonJet
+>> Leaving Package ttbarSL/muonJet
+>> Package ttbarSL/muonJet built
+gmake[1]: Entering directory '/home/dndus0107/JetMuon/CMSSW_14_2_2'
+>> Local Products Rules ..... started
+>> Local Products Rules ..... done
+@@@@ Refreshing Plugins:edmPluginRefresh
+>> Done generating edm plugin poisoned information
+>> Creating project symlinks
+>> Done python_symlink
+>> Compiling python3 modules cfipython/slc7_amd64_gcc12/ttbarSL/muonJet
+>> Compiling python3 modules python
+>> Compiling python3 modules src/ttbarSL/muonJet/python
+>> Plugins of all types refreshed.
+>> All python modules compiled
+gmake[1]: Leaving directory '/home/dndus0107/JetMuon/CMSSW_14_2_2'

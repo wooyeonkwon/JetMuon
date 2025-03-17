@@ -1,0 +1,2 @@
+export LD_LIBRARY_PATH=/home/dndus0107/JetMuon/CMSSW_14_2_2/src/interface/:$LD_LIBRARY_PATH
+export PYTHONPATH=$PYTHONPATH:/home/dndus0107/JetMuon/CMSSW_14_2_2/src/interface
