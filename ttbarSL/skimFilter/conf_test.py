@@ -60,7 +60,7 @@ process.out = cms.OutputModule("PoolOutputModule",
         'keep patJets_slimmedJetsPuppi__PAT*',   # Store MC matching results
         'keep edmEventAuxiliary_*_*_*',
         # Keep gen-level particles
-        'keep recoGenParticles_prunedGenParticles__PAT*',
+        'keep patPackedGenParticles_packedGenParticles__PAT*',
         'keep recoGenJets_slimmedGenJets__PAT*', 
         'keep genWeights_genWeight__*',
         'keep recoGenParticlesedmAssociation_muonMCMatch__skim*',
