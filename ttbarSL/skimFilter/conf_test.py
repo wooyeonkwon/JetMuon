@@ -54,15 +54,19 @@ process.out = cms.OutputModule("PoolOutputModule",
     ),
     outputCommands=cms.untracked.vstring(
         'drop *',
-        'keep patMuons_slimmedMuons__*',         # Store all reco muons
-        'keep patJets_slimmedJetsPuppi__PAT*',   # Store MC matching results
         'keep edmEventAuxiliary_*_*_*',
+        'keep patPackedCandidates_packedPFCandidates__PAT',
+        'keep patMuons_slimmedMuons__PAT',         # Store all reco muons
+        'keep patJets_slimmedJetsPuppi__PAT',   # Store MC matching results
         # Keep gen-level particles
-        'keep patPackedGenParticles_packedGenParticles__PAT*',
-        'keep recoGenJets_slimmedGenJets__PAT*', 
+        'keep patPackedGenParticles_packedGenParticles__PAT',
+        'keep recoGenParticles_prunedGenParticles__PAT',
+        'keep recoGenJets_slimmedGenJets__PAT',
+        'keep recoGenParticlesedmAssociation_packedPFCandidateToGenAssociation__PAT',
         'keep genWeights_genWeight__*',
-        'keep recoGenParticlesedmAssociation_muonMCMatch__skim*',
-        'keep GenEventInfoProduct_generator__*'
+        'keep recoGenParticlesedmAssociation_muonMCMatch__skim',
+        'keep GenEventInfoProduct_generator__SIM',
+        'keep LHEEventProduct_externalLHEProducer__SIM'
     )
 )
 

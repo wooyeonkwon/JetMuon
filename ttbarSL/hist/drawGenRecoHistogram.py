@@ -13,6 +13,7 @@ import gc
 import threading
 from root_tool import load_file
 from root_tool import Histo1D_def
+from root_tool import Profile1D_filtery_def
 
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(True) # don't show pop-up (can cause seg fault with multi-thread)
@@ -28,40 +29,18 @@ canvas_lock = threading.Lock()
 ##############################
 
 # directory, tree, branch name and histogram parameters setting
-DIR_NAMES = []   # set TDirectory of the root file ["data","mc" ], if no directory : []
+DIR_NAMES = ["muonJet"]   # set TDirectory of the root file ["data","mc" ], if no directory : []
 TREE_NAMES = ["Events"]               # set tree path of the root file, you must use same Treename for data and mc.
 GEN_BRANCHES = [                            # see details at Histo1D_def in the module root_tool.py
-    {"output": "muonpt_isTightGlboalZ", "name": "muon_pt", "bins": 200, "xmin": 20.0, "xmax": 120.0, "xtitle": "muonPt [GeV]", "ytitle": "Multiplicity", "condition": lambda i: "muon_isTightGlobalZ[i] && zMass_TightGlobal > 60 && zMass_TightGlobal < 120"},
-    {"output": "muoneta_isTightGlobalZ", "name": "muon_eta", "bins": 60, "xmin": -3.0, "xmax": 3.0, "xtitle": "muonEta", "ytitle": "Multiplicity", "condition": lambda i: "muon_isTightGlobalZ[i] && zMass_TightGlobal > 60 && zMass_TightGlobal < 120"},
+    {"output": "Jet_muonMultiplicity", "name": "GenJet_eta", "ymean": "GenJet_muonMultiplicity","bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "Muon_multiplicity", "condition": None},
+    {"output": "Jet_muEF", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "GenJet_muEF[i] > 0 & GenJet_muonMultiplicity[i] > 0 "},
+    {"output": "Jet_muEF_muon", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "GenJet_muEF[i] > 0 & GenJet_muonMultiplicity[i] > 0"},
 ]
 BRANCHES = [                            # see details at Histo1D_def in the module root_tool.py
-    {"output": "muonpt_isTightGlboalZ", "name": "muon_pt", "bins": 200, "xmin": 20.0, "xmax": 120.0, "xtitle": "muonPt [GeV]", "ytitle": "Multiplicity", "condition": lambda i: "muon_isTightGlobalZ[i] && zMass_TightGlobal > 60 && zMass_TightGlobal < 120"},
-    {"output": "muoneta_isTightGlobalZ", "name": "muon_eta", "bins": 60, "xmin": -3.0, "xmax": 3.0, "xtitle": "muonEta", "ytitle": "Multiplicity", "condition": lambda i: "muon_isTightGlobalZ[i] && zMass_TightGlobal > 60 && zMass_TightGlobal < 120"},
+    {"output": "Jet_muonMultiplicity", "name": "Jet_eta", "ymean": "Jet_muonMultiplicity", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "Muon_multiplicity", "condition": lambda i: "Jet_genJetIdx[i] > -1"},
+    {"output": "Jet_muEF", "name": "Jet_eta", "ymean": "Jet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "Jet_genJetIdx[i] > -1 && Jet_muEF[i] > 0 & Jet_muonMultiplicity[i] > 0"},
+    {"output": "Jet_muEF_muon", "name": "Jet_eta", "ymean": "Jet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "Jet_muEF[i] > 0 & Jet_muonMultiplicity[i] > 0"},
 ]
-
-# parameters for Normalization factor
-#cross_section from https://cms.cern.ch/iCMS/analysisadmin/cadi?ancode=SMP-22-017
-# Run 22C,D
-data_triggerEff = 0.54511
-mc_triggerEff = 0.61179
-matchingEff = 0.72132
-mc_cross_section = 2219.0  #2021.0  
-mc_cross_section_unc = 0.049  
-data_lumi = 7.9804
-gen_weight = 2265.28
-n_mc = 1290776
-equi_lumi = 0.4327
-cheat = 0.161
-# Run 22E,F,G
-# mc_cross_section = 2021.0  
-# mc_cross_section_unc = 0.049 
-# data_lumi = 5.8070 + 17.7819 + 3.0828
-# gen_weight = 2209 
-# n_mc = 10148870
-# equi_lumi = 0.4327
-
-mc_events_total = n_mc if n_mc > 0 else 1.0
-nom_factor = cheat * data_lumi * mc_cross_section * gen_weight / (mc_events_total)
 
 # final_survie_event (data) = data_lumi * mc_cross_section * mc_triggerEff * mc_selectionEff
 # final_survie_event (mc) = mc_events * mc_selectionEff * mc_triggerEff * matchingEff / gen_weight
@@ -109,22 +88,19 @@ def log_corrupted_entry(event_number):
 
 def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
 
-    hist_gen = Histo1D_def(mc_rdf, gen_branch)
-    hist_reco = Histo1D_def(mc_rdf, branch)
-
-    hist_gen.Scale(nom_factor)
+    hist_gen = Profile1D_filtery_def(mc_rdf, gen_branch)
+    hist_reco = Profile1D_filtery_def(mc_rdf, branch)
 
     # Bin uncertainty calculate
-    for bin_idx in range(1, hist_gen.GetNbinsX() + 1):
-        bin_content = hist_gen.GetBinContent(bin_idx)
-        bin_stat_unc = hist_gen.GetBinError(bin_idx)
-        bin_scale_unc = bin_content * (mc_cross_section_unc / mc_cross_section)
-        total_unc = ROOT.TMath.Sqrt(bin_stat_unc**2 + bin_scale_unc**2)
-        hist_gen.SetBinError(bin_idx, total_unc)
+#    for bin_idx in range(1, hist_gen.GetNbinsX() + 1):
+#        bin_stat_unc = hist_gen.GetBinError(bin_idx)
+#        hist_gen.SetBinError(bin_idx, bin_stat_unc)
 
     # draw and decorate canvas
     with canvas_lock: # deactivate multi-thread
         canvas = ROOT.TCanvas("canvas", "", 800, 800)
+        canvas.SetLeftMargin(0.15)
+        canvas.SetBottomMargin(0.15)
         hist_reco.SetMarkerStyle(20)
         hist_reco.SetMarkerColor(ROOT.kBlack)
         hist_reco.SetLineColor(ROOT.kBlack)
@@ -133,21 +109,29 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         
         # pad1
         pad1 = ROOT.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
+        pad1.SetLeftMargin(0.15)
         pad1.SetBottomMargin(0)
         pad1.Draw()
         pad1.cd()
-        
+        hist_gen.GetYaxis().SetTitle(branch['ytitle'])
+        hist_gen.GetYaxis().SetTitleSize(0.06)
+        hist_gen.GetYaxis().SetRangeUser(0.0, 0.2)
         hist_gen.Draw("HIST")
         hist_reco.Draw("E same")
+        gen_entries = int(hist_gen.Integral())
+        reco_entries = int(hist_reco.Integral())
+        print(f"gen_entries : {gen_entries}, reco_etnries: {reco_entries}")
         
         latex = ROOT.TLatex()
         latex.SetNDC()
         latex.SetTextSize(0.035)
         latex.SetTextFont(62)  # bold font for "CMS"
-        latex.DrawLatex(0.15, 0.91, "CMS")
+        latex.SetTextAlign(12)
+        latex.DrawLatex(0.10, 0.92, "CMS")
         latex.SetTextFont(42)  # normal font
-        latex.DrawLatex(0.21, 0.91, "#it{In Progress}")
-        latex.DrawLatex(0.70, 0.91, "#sqrt{s} = 13.6 TeV, L = 7.6 /fb")
+        latex.DrawLatex(0.17, 0.92, "#it{In Progress}")
+        latex.SetTextAlign(32)
+        latex.DrawLatex(0.9, 0.92, "#sqrt{s} = 13.6 TeV")
         
         legend = ROOT.TLegend(0.7, 0.7, 0.9, 0.9)
         legend.AddEntry(hist_reco.GetValue(), "MC_RECO", "lep")
@@ -157,6 +141,7 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         # pad2
         canvas.cd()
         pad2 = ROOT.TPad("pad2", "pad2", 0, 0.05, 1, 0.3)
+        pad2.SetLeftMargin(0.15)
         pad2.SetTopMargin(0)
         pad2.SetBottomMargin(0.2)
         pad2.Draw()
@@ -166,18 +151,22 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         ratioHist.Divide(hist_gen.GetValue())
         ratioHist.SetTitle("")
         ratioHist.GetYaxis().SetTitle("MC_RECO / MC_GEN")
+        ratioHist.GetYaxis().SetRangeUser(0.0, 2.0)
         ratioHist.GetYaxis().SetNdivisions(505)
         ratioHist.GetYaxis().SetTitleSize(20)
         ratioHist.GetYaxis().SetTitleFont(43)
         ratioHist.GetYaxis().SetTitleOffset(1.55)
         ratioHist.GetYaxis().SetLabelFont(43)
         ratioHist.GetYaxis().SetLabelSize(15)
-        ratioHist.GetXaxis().SetTitleSize(20)
+        ratioHist.GetXaxis().SetTitle(branch['xtitle'])
+        ratioHist.GetXaxis().SetTitleSize(0.06)
         ratioHist.GetXaxis().SetTitleFont(43)
         ratioHist.GetXaxis().SetTitleOffset(4.0)
         ratioHist.GetXaxis().SetLabelFont(43)
         ratioHist.GetXaxis().SetLabelSize(15)
-        ratioHist.Draw("ep")
+        ratioHist.SetErrorOption("")
+        ratioHist.Draw()
+
         
         line = ROOT.TLine(branch['xmin'], 1, branch['xmax'], 1)
         line.SetLineColor(ROOT.kRed)
@@ -201,7 +190,7 @@ def main(mc_filename, output_dir="."):
     mc_file = None
     gc.collect()
 
-    mc_file, mc_dir = load_file(mc_filename, DIR_NAMES)
+    mc_file, mc_dir = load_file(mc_filename, DIR_NAMES[0])
 
     for tree_name in TREE_NAMES:
         mc_tree = mc_dir.Get(tree_name)

@@ -265,6 +265,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     reco::GenParticleRef genPartRef = (*pfToGenAssoc)[packedMuonPtr];
     if (genPartRef.isNonnull()) {
       for (const auto& genPart : *genParticles) {
+        if (!(std::fabs(genPart.pdgId()) == 13)) continue;
         if (&genPart == genPartRef.get()){
           genPartIdx = gPartIdx;
           break;
@@ -280,6 +281,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     pat::PackedGenParticleRef packedGenPartRef = (*pfToPackedGenAssoc)[packedMuonPtr];
     if (packedGenPartRef.isNonnull()) {
       for (const auto& packedGenPart : *packedGenParticles) {
+        if (!(std::fabs(packedGenPart.pdgId()) == 13)) continue;
         if (&packedGenPart == packedGenPartRef.get()){
           packedGenPartIdx = pGPartIdx;
           break;
@@ -306,6 +308,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     cand = muon.genParticle();
     const auto* candMuon = dynamic_cast<const reco::GenParticle*>(cand);
     for (const auto& genPart : *genParticles) {
+      if (!(std::fabs(genPart.pdgId()) == 13)) continue;
       if (&genPart == candMuon){
         genPartIdx = gPartIdx;
         break;
@@ -329,6 +332,8 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     // temp container for this jet
     
     for (auto daughter = jet.begin(); daughter != jet.end(); ++daughter) {
+      int idxPackedMuon = -1;
+      int idx = 0;
       if (jet.muonMultiplicity() == 0) continue;
       const reco::Candidate* constituent = nullptr;
       try {
@@ -338,9 +343,8 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         continue;
       }
       auto dau = constituent;
-      int idxPackedMuon = -1;
-      int idx = 0;
       for (const auto& packedMuon : *packedMuons) {
+        if (!packedMuon.isMuon()) continue;
         if (&packedMuon == dau) {
           idxPackedMuon = idx;
           break;
@@ -371,6 +375,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   //PackedGenPart
   for (const auto& packedGenPart : *packedGenParticles) {
+    if (!(std::fabs(packedGenPart.pdgId()) == 13)) continue; 
     PackedGenPart_pdgId.push_back(packedGenPart.pdgId());
     PackedGenPart_charge.push_back(packedGenPart.charge());
     PackedGenPart_pt.push_back(packedGenPart.pt());
@@ -381,6 +386,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   //GenPart
   for (const auto& genPart : *genParticles) {
+    if (!(std::fabs(genPart.pdgId()) == 13)) continue; 
     GenPart_pdgId.push_back(genPart.pdgId());
     GenPart_charge.push_back(genPart.charge());
     GenPart_pt.push_back(genPart.pt());
@@ -415,6 +421,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         int idxGenPart = -1;
         int idx = 0;
         for (const auto& packedGenPart : *packedGenParticles) {
+          if (!(std::fabs(packedGenPart.pdgId()) == 13)) continue;
           if (&packedGenPart == dau) {
             idxGenPart = idx;
             break;
