@@ -1,8 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 import os
 
-import FWCore.ParameterSet.Config as cms
-
 process = cms.Process("skimFilter")
 
 # Configure the MessageLogger
