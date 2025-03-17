@@ -20,7 +20,7 @@ process.options = cms.untracked.PSet(
 )
 
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("muonJet_test.root")
+    fileName = cms.string("muonJet.root")
 )
 
 process.muonJet = cms.EDAnalyzer('muonJet',

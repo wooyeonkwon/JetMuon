@@ -1,0 +1,84 @@
+DEBUG 2025-03-17 01:50:04.492 UTC: 	 CRAB Client version: v3.250217
+DEBUG 2025-03-17 01:50:04.492 UTC: 	 Running on: Linux cms.knu.ac.kr 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2025-03-17 01:50:04.492 UTC: 	 Not using Singularity
+DEBUG 2025-03-17 01:50:04.492 UTC: 	 Operating System: CentOS Linux 7 (Core)
+DEBUG 2025-03-17 01:50:04.492 UTC: 	 Executing command: 'submit'
+DEBUG 2025-03-17 01:50:04.492 UTC: 	 Found CRAB cache file /u/user/wkwon/.crab3
+DEBUG 2025-03-17 03:33:08.342 UTC: 	 CRAB Client version: v3.250217
+DEBUG 2025-03-17 03:33:08.342 UTC: 	 Running on: Linux cms.knu.ac.kr 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2025-03-17 03:33:08.342 UTC: 	 Not using Singularity
+DEBUG 2025-03-17 03:33:08.342 UTC: 	 Operating System: CentOS Linux 7 (Core)
+DEBUG 2025-03-17 03:33:08.342 UTC: 	 Executing command: 'submit'
+DEBUG 2025-03-17 03:33:08.343 UTC: 	 Found CRAB cache file /u/user/wkwon/.crab3
+INFO 2025-03-17 03:33:08.344 UTC: 	 Will use CRAB configuration file crab_conf.py
+DEBUG 2025-03-17 03:33:08.344 UTC: 	 Loading CRAB configuration file.
+DEBUG 2025-03-17 03:33:08.346 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+ERROR 2025-03-17 03:33:08.346 UTC: 	 Working area '/u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab_projects/crab_WWtoLNu2Q' already exists 
+Please change the requestName in the config file
+ERROR 2025-03-17 03:33:08.346 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/Commands/SubCommand.py", line 328, in __init__
+    self.requestarea, self.requestname, self.logfile = createWorkArea(
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/ClientUtilities.py", line 392, in createWorkArea
+    raise ConfigException("Working area '%s' already exists \nPlease change the requestName in the config file" % fullpath)
+CRABClient.ClientExceptions.ConfigException: Working area '/u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab_projects/crab_WWtoLNu2Q' already exists 
+Please change the requestName in the config file
+INFO 2025-03-17 03:33:08.348 UTC: 	 Log file is /u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab.log
+DEBUG 2025-03-17 03:46:32.971 UTC: 	 CRAB Client version: v3.250217
+DEBUG 2025-03-17 03:46:32.972 UTC: 	 Running on: Linux cms.knu.ac.kr 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2025-03-17 03:46:32.972 UTC: 	 Not using Singularity
+DEBUG 2025-03-17 03:46:32.972 UTC: 	 Operating System: CentOS Linux 7 (Core)
+DEBUG 2025-03-17 03:46:32.972 UTC: 	 Executing command: 'submit'
+DEBUG 2025-03-17 03:46:32.972 UTC: 	 Found CRAB cache file /u/user/wkwon/.crab3
+INFO 2025-03-17 03:46:32.973 UTC: 	 Will use CRAB configuration file crab_conf.py
+DEBUG 2025-03-17 03:46:32.973 UTC: 	 Loading CRAB configuration file.
+DEBUG 2025-03-17 03:46:32.975 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+ERROR 2025-03-17 03:46:32.975 UTC: 	 Working area '/u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab_projects/crab_WWtoLNu2Q' already exists 
+Please change the requestName in the config file
+ERROR 2025-03-17 03:46:32.976 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/Commands/SubCommand.py", line 328, in __init__
+    self.requestarea, self.requestname, self.logfile = createWorkArea(
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/ClientUtilities.py", line 392, in createWorkArea
+    raise ConfigException("Working area '%s' already exists \nPlease change the requestName in the config file" % fullpath)
+CRABClient.ClientExceptions.ConfigException: Working area '/u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab_projects/crab_WWtoLNu2Q' already exists 
+Please change the requestName in the config file
+INFO 2025-03-17 03:46:32.978 UTC: 	 Log file is /u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab.log
+DEBUG 2025-03-17 03:52:24.657 UTC: 	 CRAB Client version: v3.250217
+DEBUG 2025-03-17 03:52:24.658 UTC: 	 Running on: Linux cms.knu.ac.kr 3.10.0-1160.119.1.el7.x86_64 #1 SMP Tue Jun 4 14:43:51 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+DEBUG 2025-03-17 03:52:24.658 UTC: 	 Not using Singularity
+DEBUG 2025-03-17 03:52:24.658 UTC: 	 Operating System: CentOS Linux 7 (Core)
+DEBUG 2025-03-17 03:52:24.658 UTC: 	 Executing command: 'submit'
+DEBUG 2025-03-17 03:52:24.658 UTC: 	 Found CRAB cache file /u/user/wkwon/.crab3
+INFO 2025-03-17 03:52:24.659 UTC: 	 Will use CRAB configuration file crab_conf.py
+DEBUG 2025-03-17 03:52:24.659 UTC: 	 Loading CRAB configuration file.
+DEBUG 2025-03-17 03:52:24.663 UTC: 	 Will use CRAB plugin ANALYSIS (i.e. will run an analysis job type).
+ERROR 2025-03-17 03:52:24.663 UTC: 	 Working area '/u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab_projects/crab_WWtoLNu2Q' already exists 
+Please change the requestName in the config file
+ERROR 2025-03-17 03:52:24.663 UTC: 	 Caught ClientException exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/bin/crab.py", line 157, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/bin/crab.py", line 135, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])  # the crab command to be executed
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/Commands/submit.py", line 37, in __init__
+    SubCommand.__init__(self, logger, cmdargs, disable_interspersed_args=True)
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/Commands/SubCommand.py", line 328, in __init__
+    self.requestarea, self.requestname, self.logfile = createWorkArea(
+  File "/cvmfs/cms.cern.ch/share/cms/crab-prod/v3.250217.00/lib/CRABClient/ClientUtilities.py", line 392, in createWorkArea
+    raise ConfigException("Working area '%s' already exists \nPlease change the requestName in the config file" % fullpath)
+CRABClient.ClientExceptions.ConfigException: Working area '/u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab_projects/crab_WWtoLNu2Q' already exists 
+Please change the requestName in the config file
+INFO 2025-03-17 03:52:24.666 UTC: 	 Log file is /u/user/wkwon/work/CMSSW_14_2_2/src/ttbarSL/muonJet/crab.log

@@ -22,4 +22,4 @@ config.Data.outLFNDirBase = '/store/user/wkwon/AnalysisResults/'
 config.Data.publication = False
 
 config.Site.storageSite = 'T3_KR_KNU'
-config.JobType.outputFiles = ['skimmed_data.root']
+config.JobType.outputFiles = ['muonJet.root']
