@@ -33,9 +33,9 @@ process.muonMCMatch = cms.EDProducer("MCMatcher",
 
 # Skim filter
 process.skimFilter = cms.EDFilter('skimFilter',
-    triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
-    HLT_IsoMu24_v=cms.string("HLT_IsoMu24_v"),
-    HLT_Ele32_WPTight_Gsf_v=cms.string("HLT_Ele32_WPTight_Gsf_v"),
+#    triggerResults=cms.InputTag("TriggerResults", "", "HLT"),
+#    HLT_IsoMu24_v=cms.string("HLT_IsoMu24_v"),
+#    HLT_Ele32_WPTight_Gsf_v=cms.string("HLT_Ele32_WPTight_Gsf_v"),
     muons = cms.InputTag("slimmedMuons"),
     electrons = cms.InputTag("slimmedElectrons")
 )

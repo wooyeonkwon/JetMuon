@@ -19,6 +19,8 @@
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
+#include "DataFormats/Math/interface/deltaR.h"
+#include "DataFormats/Common/interface/Ref.h"
 #include "TFile.h"
 #include "TTree.h"
 #include <cstdlib>
@@ -51,6 +53,7 @@ private:
   edm::EDGetTokenT<edm::Association<pat::PackedGenParticleCollection>> packedPFCandidateToPackedGenAssociationToken_;
   edm::EDGetTokenT<GenEventInfoProduct> generatorToken_;
 
+
   unsigned long long EventNumber;
   float GenWeight;
 
@@ -59,25 +62,35 @@ private:
   std::vector<double> PackedMuon_eta;
   std::vector<double> PackedMuon_phi;
   std::vector<double> PackedMuon_mass;
+  std::vector<double> PackedMuon_energy;
   std::vector<int> PackedMuon_genPartIdx;
   std::vector<int> PackedMuon_packedGenPartIdx;
+  std::vector<int> PackedMuon_muonIdx;
 
   std::vector<short> Muon_charge;
   std::vector<double> Muon_pt;
   std::vector<double> Muon_eta;
   std::vector<double> Muon_phi;
   std::vector<double> Muon_mass;
+  std::vector<double> Muon_energy;
   std::vector<int> Muon_genPartIdx;
+  std::vector<bool> Muon_isSoftMuon;
 
   std::vector<double> Jet_pt;
   std::vector<double> Jet_eta;
   std::vector<double> Jet_phi;
   std::vector<double> Jet_mass;
-  std::vector<double> Jet_muEF;
+  std::vector<double> Jet_energy;
+  std::vector<float> Jet_chHadEF;
+  std::vector<float> Jet_photonEF;
+  std::vector<float> Jet_neuHadEF; 
+  std::vector<float> Jet_eleEF;
+  std::vector<float> Jet_muEF;
   std::vector<std::vector<int>> Jet_packedMuonIdx;
   std::vector<int> OneJet_packedMuonIdx;
   std::vector<int> Jet_genJetIdx;
   std::vector<int> Jet_muonMultiplicity;
+  std::vector<int> Jet_ID;
 
   std::vector<double> PackedGenPart_pdgId;
   std::vector<short> PackedGenPart_charge;
@@ -85,6 +98,7 @@ private:
   std::vector<double> PackedGenPart_eta;
   std::vector<double> PackedGenPart_phi;
   std::vector<double> PackedGenPart_mass;
+  std::vector<double> PackedGenPart_energy;
 
   std::vector<double> GenPart_pdgId;
   std::vector<short> GenPart_charge;
@@ -92,14 +106,21 @@ private:
   std::vector<double> GenPart_eta;
   std::vector<double> GenPart_phi;
   std::vector<double> GenPart_mass;
+  std::vector<double> GenPart_energy;
 
   std::vector<double> GenJet_pt;
   std::vector<double> GenJet_eta;
   std::vector<double> GenJet_phi;
   std::vector<double> GenJet_mass;
-  std::vector<double> GenJet_muEF;
+  std::vector<double> GenJet_energy;
+  std::vector<float> GenJet_chHadEF;
+  std::vector<float> GenJet_photonEF;
+  std::vector<float> GenJet_neuHadEF; 
+  std::vector<float> GenJet_eleEF;
+  std::vector<float> GenJet_muEF;
   std::vector<std::vector<int>> GenJet_packedGenMuonIdx;
   std::vector<int> OneGenJet_packedGenMuonIdx;
+  std::vector<int> GenJet_jetIdx;
   std::vector<int> GenJet_muonMultiplicity;
 
 };
@@ -137,24 +158,35 @@ void muonJet::beginJob() {
   tree->Branch("PackedMuon_eta", &PackedMuon_eta);
   tree->Branch("PackedMuon_phi", &PackedMuon_phi);
   tree->Branch("PackedMuon_mass", &PackedMuon_mass);
+  tree->Branch("PackedMuon_energy", &PackedMuon_energy);  
   tree->Branch("PackedMuon_genPartIdx", &PackedMuon_genPartIdx);
   tree->Branch("PackedMuon_packedGenPartIdx", &PackedMuon_packedGenPartIdx);
-  
+  tree->Branch("PackedMuon_muonIdx", &PackedMuon_muonIdx);
+//  tree->Branch("PackedMuon_isSoftMuon", &PackedMuon_isSoftMuon);
+
   tree->Branch("Muon_charge", &Muon_charge);
   tree->Branch("Muon_pt", &Muon_pt);
   tree->Branch("Muon_eta", &Muon_eta);
   tree->Branch("Muon_phi", &Muon_phi);
   tree->Branch("Muon_mass", &Muon_mass);
+  tree->Branch("Muon_energy", &Muon_energy);    
   tree->Branch("Muon_genPartIdx", &Muon_genPartIdx);
+  tree->Branch("Muon_isSoftMuon", &Muon_isSoftMuon);
 
   tree->Branch("Jet_pt", &Jet_pt);
   tree->Branch("Jet_eta", &Jet_eta);
   tree->Branch("Jet_phi", &Jet_phi);
   tree->Branch("Jet_mass", &Jet_mass);
+  tree->Branch("Jet_chHadEF", &Jet_chHadEF);
+  tree->Branch("Jet_photonEF", &Jet_photonEF);
+  tree->Branch("Jet_neuHadEF", &Jet_neuHadEF);
+  tree->Branch("Jet_eleEF", &Jet_eleEF);
   tree->Branch("Jet_muEF", &Jet_muEF);
+  tree->Branch("Jet_energy", &Jet_energy);
   tree->Branch("Jet_packedMuonIdx", &Jet_packedMuonIdx);
   tree->Branch("Jet_genJetIdx", &Jet_genJetIdx);
   tree->Branch("Jet_muonMultiplicity", &Jet_muonMultiplicity);
+  tree->Branch("Jet_ID", &Jet_ID);
 
   tree->Branch("PackedGenPart_pdgId", &PackedGenPart_pdgId);
   tree->Branch("PackedGenPart_charge", &PackedGenPart_charge);
@@ -162,6 +194,7 @@ void muonJet::beginJob() {
   tree->Branch("PackedGenPart_eta", &PackedGenPart_eta);
   tree->Branch("PackedGenPart_phi", &PackedGenPart_phi);
   tree->Branch("PackedGenPart_mass", &PackedGenPart_mass);
+  tree->Branch("PackedGenPart_energy", &PackedGenPart_energy);  
 
   tree->Branch("GenPart_pdgId", &GenPart_pdgId);
   tree->Branch("GenPart_charge", &GenPart_charge);
@@ -169,14 +202,22 @@ void muonJet::beginJob() {
   tree->Branch("GenPart_eta", &GenPart_eta);
   tree->Branch("GenPart_phi", &GenPart_phi);
   tree->Branch("GenPart_mass", &GenPart_mass);
+  tree->Branch("GenPart_energy", &GenPart_energy);  
   
   tree->Branch("GenJet_pt", &GenJet_pt);
   tree->Branch("GenJet_eta", &GenJet_eta);
   tree->Branch("GenJet_phi", &GenJet_phi);
   tree->Branch("GenJet_mass", &GenJet_mass);
+  tree->Branch("GenJet_energy", &GenJet_energy);    
+  tree->Branch("GenJet_chHadEF", &GenJet_chHadEF);
+  tree->Branch("GenJet_photonEF", &GenJet_photonEF);
+  tree->Branch("GenJet_neuHadEF", &GenJet_neuHadEF);
+  tree->Branch("GenJet_eleEF", &GenJet_eleEF);
   tree->Branch("GenJet_muEF", &GenJet_muEF);
+  tree->Branch("GenJet_jetIdx", &GenJet_jetIdx);
   tree->Branch("GenJet_packedGenMuonIdx", &GenJet_packedGenMuonIdx);
   tree->Branch("GenJet_muonMultiplicity", &GenJet_muonMultiplicity);
+
 }
 
 
@@ -208,24 +249,35 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   PackedMuon_eta.clear();
   PackedMuon_phi.clear();
   PackedMuon_mass.clear();
+  PackedMuon_energy.clear();
   PackedMuon_genPartIdx.clear();
-  PackedMuon_packedGenPartIdx.clear();
+  PackedMuon_packedGenPartIdx.clear(); //not work...
+  PackedMuon_muonIdx.clear();
+//  PackedMuon_isSoftMuon.clear();  
 
   Muon_charge.clear();
   Muon_pt.clear();
   Muon_eta.clear();
   Muon_phi.clear();
   Muon_mass.clear();
+  Muon_energy.clear();
   Muon_genPartIdx.clear();
+  Muon_isSoftMuon.clear();
 
   Jet_pt.clear();
   Jet_eta.clear();
   Jet_phi.clear();
   Jet_mass.clear();
+  Jet_energy.clear();
+  Jet_chHadEF.clear();
+  Jet_photonEF.clear();
+  Jet_neuHadEF.clear();
+  Jet_eleEF.clear();
   Jet_muEF.clear();
   Jet_packedMuonIdx.clear();
   Jet_genJetIdx.clear();
   Jet_muonMultiplicity.clear();
+  Jet_ID.clear();
 
   PackedGenPart_pdgId.clear();
   PackedGenPart_charge.clear();
@@ -233,6 +285,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   PackedGenPart_eta.clear();
   PackedGenPart_phi.clear();
   PackedGenPart_mass.clear();
+  PackedGenPart_energy.clear();
 
   GenPart_pdgId.clear();
   GenPart_charge.clear();
@@ -240,35 +293,74 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   GenPart_eta.clear();
   GenPart_phi.clear();
   GenPart_mass.clear();
+  GenPart_energy.clear();
 
   GenJet_pt.clear();
   GenJet_eta.clear();
   GenJet_phi.clear();
   GenJet_mass.clear();
+  GenJet_energy.clear();
+  GenJet_chHadEF.clear();
+  GenJet_photonEF.clear();
+  GenJet_neuHadEF.clear();
+  GenJet_eleEF.clear();
   GenJet_muEF.clear();
   GenJet_packedGenMuonIdx.clear();
   GenJet_muonMultiplicity.clear();
+  GenJet_jetIdx.clear();
+
+  PackedMuon_muonIdx.reserve(packedMuons->size());
+  std::vector<bool> muonTaken(muons->size(), false);
 
   //packedMuon
+  int packedmuonIdx = -1;
   for (const auto& packedMuon : *packedMuons) {
-    if (!packedMuon.isMuon()) continue;
+    packedmuonIdx++;
+    if (!(std::fabs(packedMuon.pdgId())==13)) continue;
     PackedMuon_charge.push_back(packedMuon.charge());
     PackedMuon_pt.push_back(packedMuon.pt());
     PackedMuon_eta.push_back(packedMuon.eta());
     PackedMuon_phi.push_back(packedMuon.phi());
     PackedMuon_mass.push_back(packedMuon.mass());
+    PackedMuon_energy.push_back(packedMuon.energy());
+    int bestIdx = -1;
+    double bestDR = 999.;
+
+    int muIdx = -1;
+    for (const auto& muon : *muons) {
+      ++muIdx;
+      if (muonTaken[muIdx]) continue;            
+      if (muon.charge() != packedMuon.charge()) continue;
+
+      double dR = reco::deltaR(packedMuon, muon);
+      if (dR >= 0.30) continue;
+
+      double dPtRel = std::abs(packedMuon.pt() - muon.pt()) / muon.pt();
+      if (dPtRel >= 0.50) continue;
+
+      if (dR < bestDR) {
+        bestDR  = dR;
+        bestIdx = muIdx;
+      }
+    }
+
+    PackedMuon_muonIdx.push_back(bestIdx);
+    if (bestIdx != -1) muonTaken[bestIdx] = true;
     
     // PackedMuon_genPartIdx
     int genPartIdx = -1;
     int gPartIdx = 0;
-    edm::Ptr<pat::PackedCandidate> packedMuonPtr(packedMuons, &packedMuon - &packedMuons->front());
-    reco::GenParticleRef genPartRef = (*pfToGenAssoc)[packedMuonPtr];
+    reco::CandidatePtr packedMuonRef(packedMuons, packedmuonIdx);
+    reco::GenParticleRef genPartRef = (*pfToGenAssoc)[packedMuonRef];
     if (genPartRef.isNonnull()) {
       for (const auto& genPart : *genParticles) {
         if (!(std::fabs(genPart.pdgId()) == 13)) continue;
         if (&genPart == genPartRef.get()){
           genPartIdx = gPartIdx;
           break;
+        }
+        else {
+          genPartIdx = -2;
         }
         gPartIdx++;
       }
@@ -278,11 +370,18 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     // PackedMuon_packedGenPartIdx
     int packedGenPartIdx = -1;
     int pGPartIdx = 0;
-    pat::PackedGenParticleRef packedGenPartRef = (*pfToPackedGenAssoc)[packedMuonPtr];
-    if (packedGenPartRef.isNonnull()) {
+    try {
+      auto genPackedPartRef = (*pfToPackedGenAssoc)[packedMuonRef];
+          std::cerr << "genPackedPartRef matched" << std::endl;
+    } 
+    catch (const std::exception& e) {
+      continue;
+    }
+    auto genPackedPartRef = (*pfToPackedGenAssoc)[packedMuonRef];
+    if (genPackedPartRef.isAvailable()) {
       for (const auto& packedGenPart : *packedGenParticles) {
         if (!(std::fabs(packedGenPart.pdgId()) == 13)) continue;
-        if (&packedGenPart == packedGenPartRef.get()){
+        if (&packedGenPart == genPackedPartRef.get()){
           packedGenPartIdx = pGPartIdx;
           break;
         }
@@ -301,6 +400,8 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     Muon_eta.push_back(muon.eta());
     Muon_phi.push_back(muon.phi());
     Muon_mass.push_back(muon.mass());
+    Muon_energy.push_back(muon.energy());
+    Muon_isSoftMuon.push_back(muon.passed(reco::Muon::SoftCutBasedId));
 
     int genPartIdx = -1;
     int gPartIdx = 0;
@@ -318,24 +419,86 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     Muon_genPartIdx.push_back(genPartIdx);
   }
 
+  //GenJet_jetIdx vector maker
+  for (const auto &genJet : *genJets) {
+  GenJet_jetIdx.push_back(-1);
+  }
+  int jetIdx = -1;
+
+
+
   // Jet
   for (const auto &jet : *jets) {
+    jetIdx++;
     Jet_pt.push_back(jet.pt());
     Jet_eta.push_back(jet.eta());
     Jet_phi.push_back(jet.phi());
     Jet_mass.push_back(jet.mass());
+    Jet_energy.push_back(jet.energy());
+    Jet_chHadEF.push_back(jet.chargedHadronEnergyFraction());
+    Jet_photonEF.push_back(jet.photonEnergyFraction());
+    Jet_neuHadEF.push_back(jet.neutralHadronEnergyFraction());
+    Jet_eleEF.push_back(jet.electronEnergyFraction());
     Jet_muEF.push_back(jet.muonEnergyFraction());
+    
     Jet_muonMultiplicity.push_back(jet.muonMultiplicity());
-
+    
+    //Jet ID 0:Loose 1:Tight 2:Tight Lepton Veto
+    if (std::fabs(jet.eta()) <= 2.6) {
+      if ((jet.neutralHadronEnergyFraction() < 0.99) && (jet.neutralEmEnergyFraction() < 0.9) && (jet.nConstituents() > 1) && (jet.chargedHadronEnergyFraction() > 0.01) && (jet.chargedMultiplicity() > 0)) {
+        if ((jet.muonEnergyFraction() < 0.8) && (jet.chargedEmEnergyFraction() < 0.8)){
+          Jet_ID.push_back(2);
+        }
+        else{
+          Jet_ID.push_back(1);
+        }
+      }
+      else {
+        Jet_ID.push_back(0);
+      }
+    }
+    else if ((std::fabs(jet.eta()) > 2.6) && (std::fabs(jet.eta()) <= 2.7)){
+      if ((jet.neutralHadronEnergyFraction() < 0.90) && (jet.neutralEmEnergyFraction() < 0.99)) {
+        if ((jet.muonEnergyFraction() < 0.8) && (jet.chargedEmEnergyFraction() < 0.8))
+        {
+          Jet_ID.push_back(2);
+        }
+        else{
+          Jet_ID.push_back(1);
+        }
+      }
+      else {
+        Jet_ID.push_back(0);
+      }
+    }
+    else if ((std::fabs(jet.eta()) > 2.7) && (std::fabs(jet.eta()) <= 3.0)){
+      if ((jet.neutralHadronEnergyFraction() < 0.99)) {
+        Jet_ID.push_back(2);
+      }
+      else {
+        Jet_ID.push_back(0);
+      }
+    }
+    else if ((std::fabs(jet.eta()) > 3.0) && (std::fabs(jet.eta()) <= 5.0)){
+      if ((jet.neutralEmEnergyFraction() < 0.4) && (jet.neutralMultiplicity() >= 2)) {
+        Jet_ID.push_back(2);
+      }
+      else {
+        Jet_ID.push_back(0);
+      }
+    }
+    else {
+      Jet_ID.push_back(0);
+    }
     // Jet muon Index mathcing
     OneJet_packedMuonIdx.clear();
     // temp container for this jet
     
     for (auto daughter = jet.begin(); daughter != jet.end(); ++daughter) {
-      int idxPackedMuon = -1;
-      int idx = 0;
       if (jet.muonMultiplicity() == 0) continue;
       const reco::Candidate* constituent = nullptr;
+      int idxPackedMuon = -1;
+      int idx = 0;
       try {
         constituent = &*daughter;
       } catch (cms::Exception& e) {
@@ -344,7 +507,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
       }
       auto dau = constituent;
       for (const auto& packedMuon : *packedMuons) {
-        if (!packedMuon.isMuon()) continue;
+        if (!(std::fabs(packedMuon.pdgId()) == 13)) continue;
         if (&packedMuon == dau) {
           idxPackedMuon = idx;
           break;
@@ -369,7 +532,9 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
         }
         iJet++;
       }
+      GenJet_jetIdx[iJet] = jetIdx;
     }
+    
     Jet_genJetIdx.push_back(genJetIndex);
   }
 
@@ -382,6 +547,8 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     PackedGenPart_eta.push_back(packedGenPart.eta());
     PackedGenPart_phi.push_back(packedGenPart.phi());
     PackedGenPart_mass.push_back(packedGenPart.mass());
+    PackedGenPart_energy.push_back(packedGenPart.energy());
+
   }
 
   //GenPart
@@ -393,6 +560,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     GenPart_eta.push_back(genPart.eta());
     GenPart_phi.push_back(genPart.phi());
     GenPart_mass.push_back(genPart.mass());
+    GenPart_energy.push_back(genPart.energy());
   }
 
   //GenJet
@@ -401,9 +569,14 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     GenJet_eta.push_back(genJet.eta());
     GenJet_phi.push_back(genJet.phi());
     GenJet_mass.push_back(genJet.mass());
+    GenJet_energy.push_back(genJet.energy());
+    GenJet_chHadEF.push_back((genJet.chargedHadronEnergy()/genJet.energy()));
+    GenJet_photonEF.push_back((genJet.neutralEmEnergy()/genJet.energy()));
+    GenJet_neuHadEF.push_back((genJet.neutralHadronEnergy()/genJet.energy()));
+    GenJet_eleEF.push_back((genJet.chargedEmEnergy()/genJet.energy()));
     GenJet_muEF.push_back((genJet.muonEnergy()/genJet.energy()));
-    GenJet_muonMultiplicity.push_back(genJet.muonMultiplicity());
     
+    GenJet_muonMultiplicity.push_back(genJet.muonMultiplicity());
     OneGenJet_packedGenMuonIdx.clear();
     // temp container for this jet
     for (auto daughter = genJet.begin(); daughter != genJet.end(); ++daughter) {
