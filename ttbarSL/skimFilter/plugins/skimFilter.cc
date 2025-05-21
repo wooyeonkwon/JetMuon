@@ -27,21 +27,17 @@ private:
   void beginStream(edm::StreamID) override;
   bool filter(edm::Event&, const edm::EventSetup&) override;
   void endStream() override;
-  std::string HLT_IsoMu24_v_;
-  std::string HLT_Ele32_WPTight_Gsf_v_;
-  edm::EDGetTokenT<edm::TriggerResults> triggerToken_;
   edm::EDGetTokenT<pat::ElectronCollection> electronToken_;
   edm::EDGetTokenT<pat::MuonCollection> muonToken_;
+  edm::EDGetTokenT<pat::JetCollection> jetToken_;
 
   int nIsoLepton;
 };
 
 skimFilter::skimFilter(const edm::ParameterSet& iConfig) 
-  : HLT_IsoMu24_v_(iConfig.getParameter<std::string>("HLT_IsoMu24_v")),
-    HLT_Ele32_WPTight_Gsf_v_(iConfig.getParameter<std::string>("HLT_Ele32_WPTight_Gsf_v")),
-    triggerToken_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("triggerResults"))),
-    electronToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
-    muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))){
+  : electronToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),
+    muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
+    genJetToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("genJets"))){
 
 }
 
@@ -54,39 +50,26 @@ skimFilter::~skimFilter() {
 
 // ------------ method called on each new Event  ------------
 bool skimFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  edm::Handle<edm::TriggerResults> triggerResults;
   edm::Handle<pat::ElectronCollection> electrons;
   edm::Handle<pat::MuonCollection> muons;
+  edm::Handle<pat::JetCollection> jets;
   iEvent.getByToken(muonToken_, muons);
   iEvent.getByToken(electronToken_, electrons);
-  iEvent.getByToken(triggerToken_, triggerResults);
-  
-  const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResults);
+  iEvent.getByToken(jetToken_, jets);
 
-  auto passTrigger = [&] (const edm::TriggerResults& trigResults, const edm::TriggerNames& trigNames) -> bool {
-    for (unsigned int i = 0; i < trigResults.size(); ++i) {
-      if ((trigNames.triggerName(i).find(HLT_IsoMu24_v_) != std::string::npos) ||
-          (trigNames.triggerName(i).find(HLT_Ele32_WPTight_Gsf_v_) != std::string::npos)) {
-        if (trigResults.accept(i)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
 
   auto passOnePromptLepton = [&] (const pat::ElectronCollection& elecs, const pat::MuonCollection& mus) -> bool {
     nIsoLepton = 0;
     for (const auto& muon : mus) {
-      if (muon.passed(pat::Muon::PFIsoTight)) nIsoLepton++;
+      if (muon.passed(pat::Muon::PFIsoTight) && muon.passed(pat::Muon::CutBasedIdTight) && (muon.pt() > 24)) nIsoLepton++;
     }
     for (const auto& electron : elecs) {
-      if (electron.mva_Isolated() > 0.9) nIsoLepton++;
-    }
+      if ((electron.mva_Isolated() > 0.9) && (electron.pt() > 30) && (electron.electronID("egmGsfElectronIDs:mvaEleID-RunIIIWinter22-iso-V1-wp90") == 1)) nIsoLepton++;
+    } 
     return (nIsoLepton == 1);
   };
 
-  return passTrigger(*triggerResults, triggerNames) && passOnePromptLepton(*electrons, *muons);
+  return passOnePromptLepton(*electrons, *muons);
 }
 
 
@@ -98,11 +81,9 @@ void skimFilter::endStream() {
 
 void skimFilter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("triggerResults", edm::InputTag("TriggerResults"));
-  desc.add<std::string>("HLT_IsoMu24_v", "HLT_IsoMu24_v");
-  desc.add<std::string>("HLT_Ele32_WPTight_Gsf_v", "HLT_Ele32_WPTight_Gsf_v");
   desc.add<edm::InputTag>("electrons", edm::InputTag("electrons"));
   desc.add<edm::InputTag>("muons", edm::InputTag("muons"));
+  desc.add<edm::InputTag>("jets", edm::InputTag("jets"));
   descriptions.add("skimFilter", desc);
 }
 //define this as a plug-in

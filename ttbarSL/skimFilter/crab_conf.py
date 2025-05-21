@@ -5,7 +5,7 @@ config = config()
 #config.Site.blacklist = ['T2_US_MIT']
 
 config.General.requestName = 'WWtoLNu2Q'
-config.General.workArea = 'crab_projects_2' 
+config.General.workArea = 'crab_projects_5' 
 
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'conf.py'
