@@ -41,10 +41,14 @@ process.TFileService = cms.Service("TFileService",
 )
 
 process.muonJet = cms.EDAnalyzer('muonJet',
+    packedMuons = cms.InputTag("packedPFCandidates"),                            
     muons = cms.InputTag("slimmedMuons"),
     jets = cms.InputTag("slimmedJetsPuppi"),
+    packedGenParticles = cms.InputTag("packedGenParticles"),
     genParticles = cms.InputTag("prunedGenParticles"),
     genJets = cms.InputTag("slimmedGenJets"),
+    pfToGenAssoc = cms.InputTag("packedPFCandidateToGenAssociation"),
+    pfToPackedGenAssoc = cms.InputTag("packedPFCandidateToGenAssociation"),
     generator = cms.InputTag("generator")
 )
 

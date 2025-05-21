@@ -93,12 +93,11 @@ def Histo1D_def(rdf, branch):
 
     return hist
 
-def Histo1D_def_weight(rdf, branch):
+def Histo1D_def_weight(rdf, branch, norm_weight):
     variable_name = branch["name"]
     condition = branch.get("condition", None)  # if there is no condition, None
     new_var_name = variable_name
     weight_name = branch["weight"]
-    xsection_name = branch["xsection"]
 
     # check if scalar or vector
     # nevermind error messages like the one below
@@ -138,7 +137,7 @@ def Histo1D_def_weight(rdf, branch):
             new_var_name = variable_name
         else:
             new_var_name = variable_name
-    rdf = rdf.Define("total_weight", f"""return {weight_name} * {xsection_name}""")
+    rdf = rdf.Define("total_weight", f"""return {weight_name} * {norm_weight}""")
     # create histogram
     hist = rdf.Histo1D((
         f"{variable_name}_hist",
@@ -214,10 +213,10 @@ def Profile1D_filterx_def(rdf, branch, weight = False):
     return profile
 
 # make profile with filter for change y value (result) (use for efficiency)
-def Profile1D_filtery_def(rdf, branch, weight = False):
+def Profile1D_filtery_def(rdf, branch):
     variable_ymean = branch["ymean"]
     condition = branch.get("condition", None)  # if there is no condition, None
-    new_var_ymean = variable_ymean
+    weight = variable_ymean
 
     # check if scalar or vector
     # nevermind error messages like the one below
@@ -233,71 +232,120 @@ def Profile1D_filtery_def(rdf, branch, weight = False):
     if condition:
         if is_vector:
             condition_str = condition("i") if callable(condition) else condition
-            new_var_ymean = f"filtered_{variable_ymean}"
-            rdf = rdf.Define(new_var_ymean,
+            weight = f"filtered_{variable_ymean}"
+            rdf = rdf.Define(weight,
                              f"""
                              std::vector<double> filtered;
                              for (size_t i = 0; i < {variable_ymean}.size(); ++i) {{
                                  if ({condition_str}) {{
-                                     filtered.push_back({variable_ymean}[i]);
+                                     filtered.push_back(1);
                                  }}
-                                 else {{
-                                     filtered.push_back(false);
+                                 else{{
+                                    filtered.push_back(0);
                                  }}
                              }}
                              return filtered;
                              """)
         else:
             condition_str = condition("") if callable(condition) else condition
-            new_var_ymean = f"filtered_{variable_ymean}"
-            rdf = rdf.Define(new_var_ymean,
+            weight = f"filtered_{variable_ymean}"
+            rdf = rdf.Define(weight,
                     f"""
                     return {condition_str} ? {variable_ymean} : std::numeric_limits<double>::quiet_NaN();
                     """)
 
     else:
         if is_vector:
-            new_var_ymean = variable_ymean
+            weight = variable_ymean
         else:
-            new_var_ymean = variable_ymean
+            weight = variable_ymean
 
-
-    if weight:
-        variable_weight = variable_ymean
-        # create profile
-        if isinstance(branch["bins"], list):
-            bins = np.array(branch["bins"], dtype=np.float64)
-            profile = rdf.Profile1D((
-                f"{variable_ymean}_profile",
-                branch["title"],
-                len(bins) - 1, 
-                bins
-            ), branch["name"], new_var_ymean, variable_weight)
-        else:
-            profile = rdf.Profile1D((
-                f"{variable_ymean}_profile",
-                branch["title"],        
-                branch["bins"], branch["xmin"], branch["xmax"]
-            ),  branch["name"], new_var_ymean, variable_weight)
-
-    else :
-        # create profile
-        if isinstance(branch["bins"], list):
-            bins = np.array(branch["bins"], dtype=np.float64)
-            profile = rdf.Profile1D((
-                f"{variable_ymean}_profile",
-                branch["title"],
-                len(bins) - 1, 
-                bins
-            ), branch["name"], new_var_ymean)
-        else:
-            profile = rdf.Profile1D((
-                f"{variable_ymean}_profile",
-                branch["title"],        
-                branch["bins"], branch["xmin"], branch["xmax"]
-            ),  branch["name"], new_var_ymean)
+    # create profile
+    if isinstance(branch["bins"], list):
+        bins = np.array(branch["bins"], dtype=np.float64)
+        profile = rdf.Profile1D((
+            f"{variable_ymean}_profile",
+            branch["title"],
+            len(bins) - 1, 
+            bins
+        ), branch["name"], variable_ymean, weight)
+    else:
+        profile = rdf.Profile1D((
+            f"{variable_ymean}_profile",
+            branch["title"],        
+            branch["bins"], branch["xmin"], branch["xmax"]
+        ),  branch["name"], variable_ymean, weight)
         
 
+
+    ROOT.SetOwnership(profile, False)
+
+    return profile
+
+# make profile with filter for change y value (result) (use for efficiency)
+def Profile2D_filtery_def(rdf, branch):
+    variable_ymean = branch["ymean"]
+    condition = branch.get("condition", None)  # if there is no condition, None
+    weight = variable_ymean
+
+    # check if scalar or vector
+    # nevermind error messages like the one below
+    # error: member reference base type 'const Double_t' (aka 'const double') is not a structure or union for (size_t i = 0; i < var1.size(); ++i) {
+
+    is_vector = True
+    try:
+        scalar_check_code = f"return {variable_ymean}.size();"
+        rdf.Define("check", scalar_check_code)
+    except:
+        is_vector = False
+
+    if condition:
+        if is_vector:
+            condition_str = condition("i") if callable(condition) else condition
+            weight = f"filtered_{variable_ymean}"
+            rdf = rdf.Define(weight,
+                             f"""
+                             std::vector<double> filtered;
+                             for (size_t i = 0; i < {variable_ymean}.size(); ++i) {{
+                                 if ({condition_str}) {{
+                                     filtered.push_back(1);
+                                 }}
+                                 else{{
+                                    filtered.push_back(0);
+                                 }}
+                             }}
+                             return filtered;
+                             """)
+        else:
+            condition_str = condition("") if callable(condition) else condition
+            weight = f"filtered_{variable_ymean}"
+            rdf = rdf.Define(weight,
+                    f"""
+                    return {condition_str} ? {variable_ymean} : std::numeric_limits<double>::quiet_NaN();
+                    """)
+
+    else:
+        if is_vector:
+            weight = variable_ymean
+        else:
+            weight = variable_ymean
+    # create profile
+    if isinstance(branch["xbins"], list):
+        bins = np.array(branch["xbins"], dtype=np.float64)
+        profile = rdf.Profile2D((
+            f"{variable_ymean}_profile",
+            branch["title"],
+            len(bins) - 1, 
+            bins
+        ), branch["name"], variable_ymean, weight)
+    else:
+        profile = rdf.Profile2D((
+            f"{variable_ymean}_profile",
+            branch["title"],        
+            branch["xbins"], branch["xmin"], branch["xmax"],
+            branch["ybins"], branch["ymin"], branch["ymax"]
+        ),  branch["xname"], branch["yname"], variable_ymean, weight)
+        
 
     ROOT.SetOwnership(profile, False)
 
@@ -329,7 +377,6 @@ def Profile1D_filtery_def_test(rdf, branch):
         rdf = rdf.Filter(condition)
     else :
         rdf = rdf.Filter(condition)
-
 
 
     # create profile

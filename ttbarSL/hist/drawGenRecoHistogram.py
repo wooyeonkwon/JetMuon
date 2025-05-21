@@ -18,7 +18,7 @@ from root_tool import Profile1D_filtery_def
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(True) # don't show pop-up (can cause seg fault with multi-thread)
 ROOT.EnableThreadSafety()
-ROOT.EnableImplicitMT(48) # activate multi-thread and set a number of threads
+ROOT.EnableImplicitMT(56) # activate multi-thread and set a number of threads
 
 data_entry_numbers = []
 log_lock = threading.Lock()
@@ -27,19 +27,38 @@ canvas_lock = threading.Lock()
 ##############################
 # Set user define parameters #
 ##############################
-
 # directory, tree, branch name and histogram parameters setting
 DIR_NAMES = ["muonJet"]   # set TDirectory of the root file ["data","mc" ], if no directory : []
 TREE_NAMES = ["Events"]               # set tree path of the root file, you must use same Treename for data and mc.
 GEN_BRANCHES = [                            # see details at Histo1D_def in the module root_tool.py
-    {"output": "Jet_muonMultiplicity", "name": "GenJet_eta", "ymean": "GenJet_muonMultiplicity","bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "Muon_multiplicity", "condition": None},
-    {"output": "Jet_muEF", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "GenJet_muEF[i] > 0 & GenJet_muonMultiplicity[i] > 0 "},
-    {"output": "Jet_muEF_muon", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "GenJet_muEF[i] > 0 & GenJet_muonMultiplicity[i] > 0"},
+#    {"output": "Jet_Eta_hist_cor", "name": "GenJet_eta", "bins": 100, "xmin": -5.0, "xmax": 5.0, "title": "", "xtitle": "Jet Multiplicity", "ytitle": "Jets", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0))))"},
+#    {"output": "Jet_Multiplicity_hist", "name": "nGenJet", "bins": 25, "xmin": 0.0, "xmax": 25.0, "title": "", "xtitle": "Jet Multiplicity", "ytitle": "Events", "condition": None},
+#    {"output": "Jet_muonMultiplicity_hist", "name": "GenJet_muonMultiplicity", "bins": 10, "xmin": 0.0, "xmax": 10.0, "title": "", "xtitle": "Muon multiplicity in each Jet", "ytitle": "Jets", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0))))"},
+#    {"output": "Jet_muon_pt_hist", "name": "PackedGenPart_pt_jet", "bins": 200, "xmin": 0.0, "xmax": 200.0, "title": "", "xtitle": "Muon pt (GeV)", "ytitle": "Muons (/1GeV)", "condition": lambda i: "PackedGenPart_pt_jet[i] > 0"},
+#    {"output": "Jet_muonMultiplicity", "name": "GenJet_eta", "ymean": "GenJet_muonMultiplicity","bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon multiplicity of jet", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0))))"},
+#    {"output": "Jet_muonMultiplicity_01", "name": "GenJet_eta", "ymean": "GenJet_muonMultiplicity","bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon multiplicity of jet", "condition": lambda i: "(GenJet_muonMultiplicity[i] < 2) && (GenJet_muonMultiplicity[i] > -1) && ((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0))))"},
+#    {"output": "Jet_muonMultiplicity_mul", "name": "GenJet_eta", "ymean": "GenJet_muonMultiplicity","bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon multiplicity of jet", "condition": lambda i: "(GenJet_muonMultiplicity[i] > 1) && ((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0))))"},
+#    {"output": "Jet_muEF", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0))))"},
+#    {"output": "Jet_muEF_1", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0)))) && (GenJet_muonMultiplicity[i] == 1) && (GenJet_muonMultiplicity[i] > -1)"},
+#    {"output": "Jet_muEF_01", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0)))) && (GenJet_muonMultiplicity[i] < 2) && (GenJet_muonMultiplicity[i] > -1) && (Jet_pt[GenJet_jetIdx[i]] > 15) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) <= 5.0)"},
+#    {"output": "Jet_muEF_mul", "name": "GenJet_eta", "ymean": "GenJet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "((GenJet_jetIdx[i] > -1) && (Jet_ID[GenJet_jetIdx[i]] > 0) && (Jet_pt[GenJet_jetIdx[i]] > 30) && (!((Jet_pt[GenJet_jetIdx[i]] < 50) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0)))) && GenJet_muEF[i] > 0 && (GenJet_muonMultiplicity[i] > 1) && (Jet_pt[GenJet_jetIdx[i]] > 15) && (std::fabs(Jet_eta[GenJet_jetIdx[i]]) <= 5.0)"},
+    {"output": "Muon_JetMuon_eta", "name": "GenMuon_JetMuon_eta", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "eta", "ytitle": "Jets", "condition": lambda i: "GenMuon_JetMuon_eta[i] > -99"},
+
 ]
 BRANCHES = [                            # see details at Histo1D_def in the module root_tool.py
-    {"output": "Jet_muonMultiplicity", "name": "Jet_eta", "ymean": "Jet_muonMultiplicity", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "Muon_multiplicity", "condition": lambda i: "Jet_genJetIdx[i] > -1"},
-    {"output": "Jet_muEF", "name": "Jet_eta", "ymean": "Jet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "Jet_genJetIdx[i] > -1 && Jet_muEF[i] > 0 & Jet_muonMultiplicity[i] > 0"},
-    {"output": "Jet_muEF_muon", "name": "Jet_eta", "ymean": "Jet_muEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "muon energy fraction in one jet", "condition": lambda i: "Jet_muEF[i] > 0 & Jet_muonMultiplicity[i] > 0"},
+#    {"output": "Jet_Eta_hist_cor", "name": "Jet_eta", "bins": 100, "xmin": -5.0, "xmax": 5.0, "title": "", "xtitle": "Jet Multiplicity", "ytitle": "Jets", "condition": lambda i: "((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+#    {"output": "Jet_Multiplicity_hist", "name": "nJet", "bins": 25, "xmin": 0.0, "xmax": 25.0, "title": "", "xtitle": "Jet Multiplicity", "ytitle": "Events", "condition": None},
+#    {"output": "Jet_muonMultiplicity_hist", "name": "Jet_muonMultiplicity", "bins": 10, "xmin": 0.0, "xmax": 10.0, "title": "", "xtitle": "Muon multiplicity in each Jet", "ytitle": "Jets", "condition": lambda i: "((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},    
+#    {"output": "Jet_muon_pt_hist", "name": "PackedMuon_pt_jet", "bins": 200, "xmin": 0.0, "xmax": 200.0, "title": "", "xtitle": "Muon pt (GeV)", "ytitle": "Muons (/1GeV)", "condition": lambda i: "PackedMuon_pt_jet[i] > 0"},    
+#    {"output": "Jet_muonMultiplicity", "name": "Jet_eta", "ymean": "Jet_muonMultiplicity", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon multiplicity of jet", "condition": lambda i: "((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+#    {"output": "Jet_muonMultiplicity_01", "name": "Jet_eta", "ymean": "Jet_muonMultiplicity", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon multiplicity of jet", "condition": lambda i: "(Jet_muonMultiplicity[i] < 2) && (Jet_muonMultiplicity[i] > -1) && ((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+#    {"output": "Jet_muonMultiplicity_mul", "name": "Jet_eta", "ymean": "Jet_muonMultiplicity", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon multiplicity of jet", "condition": lambda i: "(Jet_muonMultiplicity[i] > 1) && ((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0)))))"},
+#    {"output": "Jet_muEF", "name": "Jet_eta", "ymean": "Jet_globalmuEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+#    {"output": "Jet_muEF_1", "name": "Jet_eta", "ymean": "Jet_globalmuEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "(Jet_muonMultiplicity[i] == 1) && (Jet_muonMultiplicity[i] > -1) && ((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+#    {"output": "Jet_muEF_01", "name": "Jet_eta", "ymean": "Jet_globalmuEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "(Jet_muonMultiplicity[i] < 2) && (Jet_muonMultiplicity[i] > -1) && ((Jet_genJetIdx[i] > -1) && ((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+#    {"output": "Jet_muEF_mul", "name": "Jet_eta", "ymean": "Jet_globalmuEF", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "Jet_eta", "ytitle": "mean muon energy fraction of jet", "condition": lambda i: "(Jet_muonMultiplicity[i] > 1) && ((Jet_genJetIdx[i] > -1) && (Jet_ID[i] > 0) && (Jet_pt[i] > 30) && (!((Jet_pt[i] < 50) && (std::fabs(Jet_eta[i]) > 2.5) && (std::fabs(Jet_eta[i]) < 3.0))))"},
+    {"output": "Muon_JetMuon_eta", "name": "MatchedMuon_JetMuon_eta", "bins": 60, "xmin": -3.0, "xmax": 3.0, "title": "", "xtitle": "eta", "ytitle": "Jets", "condition": lambda i: "MatchedMuon_JetMuon_eta[i] > -99"},    
+
 ]
 
 # final_survie_event (data) = data_lumi * mc_cross_section * mc_triggerEff * mc_selectionEff
@@ -84,12 +103,163 @@ def log_corrupted_entry(event_number):
         with open("corrupted_entries.log", "a") as log_file: 
             log_file.write(f"Corrupted event: {event_number}\n")
 
+def rdf_filter_jet(rdf):
+    rdf = rdf.Filter(f"""
+                    for (size_t i = 0; i < Jet_pt.size(); ++i) {{
+                        if (!(Jet_ID[i] > 0) || (Jet_pt[i] < 30) || (std::fabs(Jet_eta[i]) > 2.4)) continue;
+                        return true;
+                    }}
+                    return false;
+                    """)
+    return rdf
 
+def nJet(rdf):
+    rdf = rdf.Define("nJet",
+                    f"""
+                    int n = 0;
+                    for (size_t i = 0; i < Jet_pt.size(); ++i) {{
+                        if (!(Jet_ID[i] > 0)) continue;
+                        if (!(Jet_pt[i] > 30)) continue;
+                        if (std::fabs(Jet_eta[i]) > 2.5 && std::fabs(Jet_eta[i]) < 3.0){{
+                            if (!(Jet_pt[i] > 50)) continue;
+                        }}
+                        n++;
+                    }}
+                    return n;
+                    """)
+    
+    rdf = rdf.Define("nGenJet",
+                    f"""
+                    int m = 0;
+                    for (size_t i = 0; i < GenJet_pt.size(); ++i) {{
+                        if (!(GenJet_pt[i] > 30)) continue;
+                        if (std::fabs(GenJet_eta[i]) > 2.5 && std::fabs(GenJet_eta[i]) < 3.0){{
+                            if (!(GenJet_pt[i] > 50)) continue;
+                        }}
+                        m++;
+                    }}
+                    return m;
+                    """)
+    return rdf
+
+def nMuon(rdf):
+##if (Muon_genPartIdx[PackedMuon_muonIdx[Jet_packedMuonIdx[i][j]]] > -1) 
+    rdf = rdf.Define("MatchedMuon_JetMuon_eta",
+                    f"""
+                    std::vector<double> filtered;
+                    for (size_t i = 0; i < Jet_packedMuonIdx.size(); ++i) {{
+                        if (!(Jet_genJetIdx[i] > -1)) continue;
+                        if (!(Jet_ID[i] > 0)) continue;
+                        if (!(Jet_pt[i] > 30)) continue;
+                        if (std::fabs(Jet_eta[i]) > 2.5 && std::fabs(Jet_eta[i]) < 3.0){{
+                            if (!(Jet_pt[i] > 50)) continue;
+                        }}
+                        for (size_t j = 0; j < Jet_packedMuonIdx[i].size(); ++j) {{
+                            if ((Muon_genPartIdx[PackedMuon_muonIdx[Jet_packedMuonIdx[i][j]]] > -1) && (Jet_packedMuonIdx[i][j] > -1)){{
+                                filtered.push_back(PackedMuon_eta[Jet_packedMuonIdx[i][j]]);
+                            }}
+                        }}
+                    }}
+                    return filtered;
+                    """)
+
+    rdf = rdf.Define("GenMuon_JetMuon_eta",
+                    f"""
+                    std::vector<double> filtered;
+                    for (size_t i = 0; i < GenJet_packedGenMuonIdx.size(); ++i) {{
+                        if (!(GenJet_jetIdx[i] > -1)) continue;
+                        if (!(Jet_ID[GenJet_jetIdx[i]] > 0)) continue;
+                        if (!(Jet_pt[GenJet_jetIdx[i]] > 30)) continue;
+                        if (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5 && std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0){{
+                            if (!(Jet_pt[GenJet_jetIdx[i]] > 50)) continue;
+                        }}
+                        for (size_t j = 0; j < GenJet_packedGenMuonIdx[i].size(); ++j) {{
+                            if (GenJet_packedGenMuonIdx[i][j] > -1) {{
+                            filtered.push_back(PackedGenPart_eta[GenJet_packedGenMuonIdx[i][j]]);                            
+                            }}
+                        }}
+                    }}
+                    return filtered;
+                    """)    
+
+
+
+    rdf = rdf.Define("Jet_globalMuonMultiplicity",
+                    f"""
+                    std::vector<int> filtered;
+                    for (size_t i = 0; i < Jet_packedMuonIdx.size(); ++i) {{
+                        int n = 0; 
+                        for (size_t j = 0; j < Jet_packedMuonIdx[i].size(); ++j) {{
+                            if((Jet_packedMuonIdx[i][j] > -1) && (Muon_isSoftMuon[PackedMuon_muonIdx[Jet_packedMuonIdx[i][j]]])) n++;
+                        }}
+                        filtered.push_back(n);
+                    }}
+                    return filtered;
+                    """)
+
+    rdf = rdf.Define("Jet_globalmuEF",
+                    f"""
+                    std::vector<double> filtered;
+                    for (size_t i = 0; i < Jet_packedMuonIdx.size(); ++i) {{
+                        double muEF = 0;
+                        double nomuEF = 0;
+                        for (size_t j = 0; j < Jet_packedMuonIdx[i].size(); ++j) {{
+                            if((Jet_packedMuonIdx[i][j] > -1) && (Muon_isSoftMuon[PackedMuon_muonIdx[Jet_packedMuonIdx[i][j]]])) muEF = muEF + PackedMuon_energy[Jet_packedMuonIdx[i][j]];
+                            else if((Jet_packedMuonIdx[i][j] > -1)) nomuEF = nomuEF + PackedMuon_energy[Jet_packedMuonIdx[i][j]];
+                        }}
+                        filtered.push_back(muEF/(Jet_energy[i] - nomuEF));
+                    }}
+                    return filtered;
+                    """)
+    return rdf
+
+def rdf_filter(rdf):
+    rdf = rdf.Define("PackedMuon_pt_jet",
+                    f"""
+                    std::vector<double> filtered;
+                    for (size_t i = 0; i < Jet_packedMuonIdx.size(); ++i) {{
+                        if (!(Jet_genJetIdx[i] > -1)) continue;
+                        if (!(Jet_ID[i] > 0)) continue;
+                        if (!(Jet_pt[i] > 30)) continue;
+                        if (std::fabs(Jet_eta[i]) > 2.5 && std::fabs(Jet_eta[i]) < 3.0){{
+                            if (!(Jet_pt[i] > 50)) continue;
+                        }}
+                        for (size_t j = 0; j < Jet_packedMuonIdx[i].size(); ++j) {{
+                            if((Jet_packedMuonIdx[i][j] > -1) && (Muon_isSoftMuon[PackedMuon_muonIdx[Jet_packedMuonIdx[i][j]]])) {{
+                                filtered.push_back(PackedMuon_pt[Jet_packedMuonIdx[i][j]]);
+                                }}
+                        }}
+                    }}
+                    return filtered;
+                    """)
+    
+    rdf = rdf.Define("PackedGenPart_pt_jet",
+                f"""
+                std::vector<double> filtered;
+                for (size_t i = 0; i < GenJet_packedGenMuonIdx.size(); ++i) {{
+                    if (!(GenJet_jetIdx[i] > -1)) continue;
+                    if (!(Jet_ID[GenJet_jetIdx[i]] > 0)) continue;
+                    if (!(Jet_pt[GenJet_jetIdx[i]] > 30)) continue;
+                    if (std::fabs(Jet_eta[GenJet_jetIdx[i]]) > 2.5 && std::fabs(Jet_eta[GenJet_jetIdx[i]]) < 3.0){{
+                        if (!(Jet_pt[GenJet_jetIdx[i]] > 50)) continue;
+                    }}
+                    for (size_t j = 0; j < GenJet_packedGenMuonIdx[i].size(); ++j) {{
+                        if(GenJet_packedGenMuonIdx[i][j] > -1) {{
+                            filtered.push_back(PackedGenPart_pt[GenJet_packedGenMuonIdx[i][j]]);
+                            }}
+                    }}
+                }}
+                return filtered;
+                """)
+    return rdf
 
 def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
 
-    hist_gen = Profile1D_filtery_def(mc_rdf, gen_branch)
-    hist_reco = Profile1D_filtery_def(mc_rdf, branch)
+
+    #hist_gen = Profile1D_filtery_def(mc_rdf, gen_branch)
+    #hist_reco = Profile1D_filtery_def(mc_rdf, branch)
+    hist_gen = Histo1D_def(mc_rdf, gen_branch)
+    hist_reco = Histo1D_def(mc_rdf, branch)
 
     # Bin uncertainty calculate
 #    for bin_idx in range(1, hist_gen.GetNbinsX() + 1):
@@ -101,10 +271,10 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         canvas = ROOT.TCanvas("canvas", "", 800, 800)
         canvas.SetLeftMargin(0.15)
         canvas.SetBottomMargin(0.15)
-        hist_reco.SetMarkerStyle(20)
-        hist_reco.SetMarkerColor(ROOT.kBlack)
+        #hist_reco.SetMarkerStyle(20)
+        #hist_reco.SetMarkerColor(ROOT.kBlack)
         hist_reco.SetLineColor(ROOT.kBlack)
-        hist_gen.SetFillColor(ROOT.kBlue)
+        #hist_gen.SetFillColor(ROOT.kBlue)
         hist_gen.SetLineColor(ROOT.kBlue)
         
         # pad1
@@ -112,12 +282,14 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         pad1.SetLeftMargin(0.15)
         pad1.SetBottomMargin(0)
         pad1.Draw()
+        pad1.SetLogy(True)
         pad1.cd()
         hist_gen.GetYaxis().SetTitle(branch['ytitle'])
         hist_gen.GetYaxis().SetTitleSize(0.06)
-        hist_gen.GetYaxis().SetRangeUser(0.0, 0.2)
+        ymax = 10 * max(hist_gen.GetMaximum(),hist_reco.GetMaximum())
+        hist_gen.GetYaxis().SetRangeUser(1, ymax)
         hist_gen.Draw("HIST")
-        hist_reco.Draw("E same")
+        hist_reco.Draw("HIST Same")
         gen_entries = int(hist_gen.Integral())
         reco_entries = int(hist_reco.Integral())
         print(f"gen_entries : {gen_entries}, reco_etnries: {reco_entries}")
@@ -134,8 +306,8 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         latex.DrawLatex(0.9, 0.92, "#sqrt{s} = 13.6 TeV")
         
         legend = ROOT.TLegend(0.7, 0.7, 0.9, 0.9)
-        legend.AddEntry(hist_reco.GetValue(), "MC_RECO", "lep")
-        legend.AddEntry(hist_gen.GetValue(), "MC_GEN", "f")
+        legend.AddEntry(hist_reco.GetValue(), "patJetMuon", "f")
+        legend.AddEntry(hist_gen.GetValue(), "genJetMuon", "f")
         legend.Draw()
         
         # pad2
@@ -150,8 +322,10 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         ratioHist = hist_reco.Clone("ratioHist")
         ratioHist.Divide(hist_gen.GetValue())
         ratioHist.SetTitle("")
-        ratioHist.GetYaxis().SetTitle("MC_RECO / MC_GEN")
-        ratioHist.GetYaxis().SetRangeUser(0.0, 2.0)
+        ratioHist.GetYaxis().SetTitle("patJet / genJet")
+
+        ratioHist.GetYaxis().SetRangeUser(0.9 * ratioHist.GetMinimum(), 1.1 * ratioHist.GetMaximum())
+        ratioHist.GetYaxis().SetRangeUser(0.0,2.0)
         ratioHist.GetYaxis().SetNdivisions(505)
         ratioHist.GetYaxis().SetTitleSize(20)
         ratioHist.GetYaxis().SetTitleFont(43)
@@ -159,13 +333,11 @@ def draw_histogram(mc_rdf, tree_name, gen_branch, branch, output_dir="."):
         ratioHist.GetYaxis().SetLabelFont(43)
         ratioHist.GetYaxis().SetLabelSize(15)
         ratioHist.GetXaxis().SetTitle(branch['xtitle'])
-        ratioHist.GetXaxis().SetTitleSize(0.06)
+        ratioHist.GetXaxis().SetTitleSize(20)
         ratioHist.GetXaxis().SetTitleFont(43)
-        ratioHist.GetXaxis().SetTitleOffset(4.0)
         ratioHist.GetXaxis().SetLabelFont(43)
         ratioHist.GetXaxis().SetLabelSize(15)
-        ratioHist.SetErrorOption("")
-        ratioHist.Draw()
+        ratioHist.Draw("HIST")
 
         
         line = ROOT.TLine(branch['xmin'], 1, branch['xmax'], 1)
@@ -200,6 +372,10 @@ def main(mc_filename, output_dir="."):
             continue
 
         mc_rdf = ROOT.RDataFrame(mc_tree)
+        mc_rdf = rdf_filter_jet(mc_rdf)
+        mc_rdf = nJet(mc_rdf)
+        mc_rdf = nMuon(mc_rdf)
+        mc_rdf = rdf_filter(mc_rdf)
 
         for gen_branch, branch in zip(GEN_BRANCHES, BRANCHES):
             print(f"Draw '{gen_branch}' in '{tree_name}'")
