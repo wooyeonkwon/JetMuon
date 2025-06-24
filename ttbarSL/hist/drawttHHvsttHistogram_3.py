@@ -1,4 +1,3 @@
-
 #####################################################
 # Description:                                      #
 #     draw data and mc comparision histogram.       #
@@ -30,10 +29,10 @@ canvas_lock = threading.Lock()
 DIR_NAMES = []   # set TDirectory of the root file ["data","mc" ], if no directory : []
 TREE_NAMES = ["Events"]               # set tree path of the root file, you must use same Treename for data and mc.
 BG_BRANCHES = [                            # see details at Histo1D_def in the module root_tool.py
-    {"output": "Muon_multiIsoId", "name": "Muon_pt", "weight":"genWeight", "xsection":404.0,  "bins": 185, "xmin": 15.0, "xmax": 200.0, "title": "", "xtitle": "", "ytitle": "Events", "condition": "Muon_multiIsoId[i] >= 1"},
+    {"output": "Muon_multiIsoId", "name": "Muon_pt", "weight":"genWeight", "xsection":96.9,  "bins": 185, "xmin": 15.0, "xmax": 200.0, "title": "", "xtitle": "", "ytitle": "Events", "condition": "Muon_multiIsoId[i] >= 1"},
 ]
 SIG_BRANCHES = [                            # see details at Histo1D_def in the module root_tool.py
-    {"output": "Muon_multiIsoId", "name": "Muon_pt", "weight":"genWeight", "xsection":0.0000618, "bins": 185, "xmin": 15.0, "xmax": 200.0, "title": "", "xtitle": "", "ytitle": "Events", "condition": "Muon_multiIsoId[i] >= 1"},    
+    {"output": "Muon_multiIsoId", "name": "Muon_pt", "weight":"genWeight", "xsection":0.000012, "bins": 185, "xmin": 15.0, "xmax": 200.0, "title": "", "xtitle": "", "ytitle": "Events", "condition": "Muon_multiIsoId[i] >= 1"},    
 ]
 # Define the muon isolation categories
 ISO_BRANCHES = [{"label": "looseId", "condition": "Muon_looseId[i] == 1" },
@@ -43,7 +42,7 @@ ISO_BRANCHES = [{"label": "looseId", "condition": "Muon_looseId[i] == 1" },
                 {"label": "mvaMuID_medium", "condition": "Muon_mvaMuID_WP[i] >= 1" },
                 {"label": "mvaMuID_tight", "condition": "Muon_mvaMuID_WP[i] == 2" },
                 ]
-
+TARGET_LUMI = 171610.0 # pb^-1
 # final_survie_event (data) = data_lumi * mc_cross_section * mc_triggerEff * mc_selectionEff
 # final_survie_event (mc) = mc_events * mc_selectionEff * mc_triggerEff * matchingEff / gen_weight
 # final_survie_event (data) = nom_factor * final_survie_event (mc) 
@@ -145,7 +144,7 @@ def same_sign_muon_filter(rdf):
     return rdf
 
 
-def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, norm_weight, output_dir="."):
+def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, sig_norm_weight, bg_norm_weight, output_dir="."):
 
 
     # Define the histogram for signal and background x-axis bins with ISO_BRANCHES label
@@ -165,10 +164,11 @@ def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, no
         bg_rdf = nGoodMuon(bg_rdf)
         bg_rdf = same_sign_muon_filter(bg_rdf)
         
-        sig_events = sig_rdf.Count().GetValue()
-        bg_events = int(norm_weight * bg_rdf.Count().GetValue())
+        sig_events = sig_norm_weight * sig_rdf.Count().GetValue()
+        bg_events = bg_norm_weight * bg_rdf.Count().GetValue()
+
         significance = sig_events / (np.sqrt(bg_events))
-        hist_sig.SetBinContent(i+1,sig_events)
+        hist_sig.SetBinContent(i+1,1e3*sig_events)
         hist_bg.SetBinContent(i+1,bg_events)
         significanceHist.SetBinContent(i+1,significance)
         significanceHist.GetXaxis().SetBinLabel(i+1,iso_branch['label'])
@@ -209,7 +209,7 @@ def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, no
         latex.DrawLatex(0.9, 0.92, "#sqrt{s} = 13.6 TeV")
         
         legend = ROOT.TLegend(0.8, 0.8, 0.9, 0.9)
-        legend.AddEntry(hist_sig, "ttHH", "f")
+        legend.AddEntry(hist_sig, "ttHH x 1e3", "f")
         legend.AddEntry(hist_bg, "ttbar", "f")
         legend.Draw()
         
@@ -275,7 +275,7 @@ def main(sig_filename, bg_filename, output_dir="."):
         bg_rdf = ROOT.RDataFrame(bg_tree)
         
         sig_events_org = 99998 #SL 99998, DL 99998
-        bg_events_org = 152797000 #SL 152797000, DL 48203000
+        bg_events_org = 48203000 #SL 152797000, DL 48203000
 
 
         sig_rdf_org = rdf_filter_jet(sig_rdf)
@@ -286,9 +286,9 @@ def main(sig_filename, bg_filename, output_dir="."):
             print(f"Draw '{bg_branch}' in '{tree_name}'")
             print(f"Draw '{sig_branch}' in '{tree_name}'")
             try:
-                sig_lumi = sig_events_org / sig_branch["xsection"]
-                bg_norm_weight = sig_lumi * bg_branch["xsection"] / bg_events_org
-                draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, bg_norm_weight, output_dir)
+                sig_norm_weight = TARGET_LUMI * sig_branch["xsection"] / sig_events_org
+                bg_norm_weight = TARGET_LUMI * bg_branch["xsection"] / bg_events_org
+                draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, sig_norm_weight, bg_norm_weight, output_dir)
                         
             except Exception as e:
                 # Check for specific error and log the problematic entry

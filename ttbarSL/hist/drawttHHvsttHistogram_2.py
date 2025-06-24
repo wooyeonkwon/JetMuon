@@ -17,7 +17,7 @@ import numpy as np
 ROOT.gStyle.SetOptStat(0)
 ROOT.gROOT.SetBatch(True) # don't show pop-up (can cause seg fault with multi-thread)
 ROOT.EnableThreadSafety()
-ROOT.EnableImplicitMT(240) # activate multi-thread and set a number of threads
+ROOT.EnableImplicitMT(55) # activate multi-thread and set a number of threads
 
 data_entry_numbers = []
 log_lock = threading.Lock()
@@ -60,7 +60,7 @@ ISO_BRANCHES = [{"label": "pfIsoId[1]", "condition": "Muon_pfIsoId[i] >= 1" },
                 {"label": "miniIsoId[4]", "condition": "Muon_miniIsoId[i] >= 4" },
                 {"label": "multiIsoId", "condition": "Muon_multiIsoId[i] >= 1"},
                 ]
-
+TARGET_LUMI = 171610.0 # pb^-1
 # final_survie_event (data) = data_lumi * mc_cross_section * mc_triggerEff * mc_selectionEff
 # final_survie_event (mc) = mc_events * mc_selectionEff * mc_triggerEff * matchingEff / gen_weight
 # final_survie_event (data) = nom_factor * final_survie_event (mc) 
@@ -177,7 +177,7 @@ def opposite_sign_muon_filter(rdf):
                     """)
 
 
-def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, norm_weight, output_dir="."):
+def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, sig_norm_weight, bg_norm_weight, output_dir="."):
 
 
     # Define the histogram for signal and background x-axis bins with ISO_BRANCHES label
@@ -197,11 +197,11 @@ def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, no
         bg_rdf = nGoodMuon(bg_rdf)
         bg_rdf = same_sign_muon_filter(bg_rdf)
         
-        sig_events = sig_rdf.Count().GetValue()
-        bg_events = int(norm_weight * bg_rdf.Count().GetValue())
+        sig_events = sig_norm_weight * sig_rdf.Count().GetValue()
+        bg_events = bg_norm_weight * bg_rdf.Count().GetValue()
 
         significance = sig_events / (np.sqrt(bg_events))
-        hist_sig.SetBinContent(i+1,sig_events)
+        hist_sig.SetBinContent(i+1,1e3*sig_events)
         hist_bg.SetBinContent(i+1,bg_events)
         significanceHist.SetBinContent(i+1,significance)
         significanceHist.GetXaxis().SetBinLabel(i+1,iso_branch['label'])
@@ -242,7 +242,7 @@ def draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, no
         latex.DrawLatex(0.9, 0.92, "#sqrt{s} = 13.6 TeV")
         
         legend = ROOT.TLegend(0.8, 0.8, 0.9, 0.9)
-        legend.AddEntry(hist_sig, "ttHH", "f")
+        legend.AddEntry(hist_sig, "ttHH x 1e3", "f")
         legend.AddEntry(hist_bg, "ttbar", "f")
         legend.Draw()
         
@@ -318,9 +318,9 @@ def main(sig_filename, bg_filename, output_dir="."):
             print(f"Draw '{bg_branch}' in '{tree_name}'")
             print(f"Draw '{sig_branch}' in '{tree_name}'")
             try:
-                sig_lumi = sig_events_org / sig_branch["xsection"]
-                bg_norm_weight = sig_lumi * bg_branch["xsection"] / bg_events_org
-                draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, bg_norm_weight, output_dir)
+                sig_norm_weight = TARGET_LUMI * sig_branch["xsection"] / sig_events_org
+                bg_norm_weight = TARGET_LUMI * bg_branch["xsection"] / bg_events_org
+                draw_histogram(sig_rdf_org, bg_rdf_org, tree_name, sig_branch, bg_branch, sig_norm_weight, bg_norm_weight, output_dir)
                         
             except Exception as e:
                 # Check for specific error and log the problematic entry

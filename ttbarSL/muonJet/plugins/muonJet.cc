@@ -10,6 +10,7 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h" 
 #include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
@@ -45,6 +46,7 @@ private:
   // ----------member data ---------------------------
   edm::EDGetTokenT<pat::PackedCandidateCollection> packedCandidateToken_;
   edm::EDGetTokenT<pat::MuonCollection> muonToken_;
+  edm::EDGetTokenT<pat::ElectronCollection> electronToken_;
   edm::EDGetTokenT<pat::JetCollection> jetToken_;
   edm::EDGetTokenT<pat::PackedGenParticleCollection> packedGenParticleToken_;
   edm::EDGetTokenT<reco::GenParticleCollection> genParticleToken_;
@@ -76,6 +78,13 @@ private:
   std::vector<int> Muon_genPartIdx;
   std::vector<bool> Muon_isSoftMuon;
 
+  std::vector<short> Electron_charge;
+  std::vector<double> Electron_pt;
+  std::vector<double> Electron_eta;
+  std::vector<double> Electron_phi;
+  std::vector<double> Electron_mass;
+  std::vector<double> Electron_energy;
+
   std::vector<double> Jet_pt;
   std::vector<double> Jet_eta;
   std::vector<double> Jet_phi;
@@ -91,6 +100,8 @@ private:
   std::vector<int> Jet_genJetIdx;
   std::vector<int> Jet_muonMultiplicity;
   std::vector<int> Jet_ID;
+  std::vector<float> Jet_btagPNetB;
+  std::vector<bool> Jet_Overlap;
 
   std::vector<double> PackedGenPart_pdgId;
   std::vector<short> PackedGenPart_charge;
@@ -129,6 +140,7 @@ private:
 muonJet::muonJet(const edm::ParameterSet& iConfig)
   : packedCandidateToken_(consumes<pat::PackedCandidateCollection>(iConfig.getParameter<edm::InputTag>("packedMuons"))),
     muonToken_(consumes<pat::MuonCollection>(iConfig.getParameter<edm::InputTag>("muons"))),
+    electronToken_(consumes<pat::ElectronCollection>(iConfig.getParameter<edm::InputTag>("electrons"))),    
     jetToken_(consumes<pat::JetCollection>(iConfig.getParameter<edm::InputTag>("jets"))),
     packedGenParticleToken_(consumes<pat::PackedGenParticleCollection>(iConfig.getParameter<edm::InputTag>("packedGenParticles"))),
     genParticleToken_(consumes<reco::GenParticleCollection>(iConfig.getParameter<edm::InputTag>("genParticles"))),
@@ -173,6 +185,13 @@ void muonJet::beginJob() {
   tree->Branch("Muon_genPartIdx", &Muon_genPartIdx);
   tree->Branch("Muon_isSoftMuon", &Muon_isSoftMuon);
 
+  tree->Branch("Electron_charge", &Electron_charge);
+  tree->Branch("Electron_pt", &Electron_pt);
+  tree->Branch("Electron_eta", &Electron_eta);
+  tree->Branch("Electron_phi", &Electron_phi);
+  tree->Branch("Electron_mass", &Electron_mass);
+  tree->Branch("Electron_energy", &Electron_energy);   
+
   tree->Branch("Jet_pt", &Jet_pt);
   tree->Branch("Jet_eta", &Jet_eta);
   tree->Branch("Jet_phi", &Jet_phi);
@@ -187,6 +206,8 @@ void muonJet::beginJob() {
   tree->Branch("Jet_genJetIdx", &Jet_genJetIdx);
   tree->Branch("Jet_muonMultiplicity", &Jet_muonMultiplicity);
   tree->Branch("Jet_ID", &Jet_ID);
+  tree->Branch("Jet_btagPNetB", &Jet_btagPNetB);
+  tree->Branch("Jet_Overlap", &Jet_Overlap);
 
   tree->Branch("PackedGenPart_pdgId", &PackedGenPart_pdgId);
   tree->Branch("PackedGenPart_charge", &PackedGenPart_charge);
@@ -226,6 +247,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   //get tokens
   edm::Handle<pat::PackedCandidateCollection> packedMuons;
   edm::Handle<pat::MuonCollection> muons;
+  edm::Handle<pat::ElectronCollection> electrons;
   edm::Handle<pat::JetCollection> jets;
   edm::Handle<pat::PackedGenParticleCollection> packedGenParticles;
   edm::Handle<reco::GenParticleCollection> genParticles;
@@ -235,6 +257,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<edm::Association<pat::PackedGenParticleCollection>> pfToPackedGenAssoc;
   iEvent.getByToken(packedCandidateToken_, packedMuons);
   iEvent.getByToken(muonToken_, muons);
+  iEvent.getByToken(electronToken_, electrons);
   iEvent.getByToken(jetToken_, jets);
   iEvent.getByToken(packedGenParticleToken_, packedGenParticles);
   iEvent.getByToken(genParticleToken_, genParticles);
@@ -253,7 +276,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   PackedMuon_genPartIdx.clear();
   PackedMuon_packedGenPartIdx.clear(); //not work...
   PackedMuon_muonIdx.clear();
-//  PackedMuon_isSoftMuon.clear();  
+  //  PackedMuon_isSoftMuon.clear();  
 
   Muon_charge.clear();
   Muon_pt.clear();
@@ -263,6 +286,13 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   Muon_energy.clear();
   Muon_genPartIdx.clear();
   Muon_isSoftMuon.clear();
+
+  Electron_charge.clear();
+  Electron_pt.clear();
+  Electron_eta.clear();
+  Electron_phi.clear();
+  Electron_mass.clear();
+  Electron_energy.clear();
 
   Jet_pt.clear();
   Jet_eta.clear();
@@ -278,6 +308,8 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   Jet_genJetIdx.clear();
   Jet_muonMultiplicity.clear();
   Jet_ID.clear();
+  Jet_btagPNetB.clear();
+  Jet_Overlap.clear();
 
   PackedGenPart_pdgId.clear();
   PackedGenPart_charge.clear();
@@ -394,7 +426,10 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
 
   //Muon
+  int muonIdx = -1;
+  int promptMuonIdx = -1;
   for (const auto& muon : *muons) {
+    muonIdx++;
     Muon_charge.push_back(muon.charge());
     Muon_pt.push_back(muon.pt());
     Muon_eta.push_back(muon.eta());
@@ -417,6 +452,28 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
       gPartIdx++;
     }
     Muon_genPartIdx.push_back(genPartIdx);
+
+    //prompt muon
+    if (muon.passed(pat::Muon::PFIsoTight) && muon.passed(pat::Muon::CutBasedIdTight) && (muon.pt() > 24)) {
+      promptMuonIdx = muonIdx;
+    }
+  }
+  //Electron
+  int electronIdx = -1;
+  int promptElectronIdx = -1;
+  for (const auto& electron : *electrons) {
+    electronIdx++;
+    Electron_charge.push_back(electron.charge());
+    Electron_pt.push_back(electron.pt());
+    Electron_eta.push_back(electron.eta());
+    Electron_phi.push_back(electron.phi());
+    Electron_mass.push_back(electron.mass());
+    Electron_energy.push_back(electron.energy());
+
+    //prompt muon
+    if ((electron.mva_Isolated() > 0.9) && (electron.pt() > 30) && (electron.electronID("egmGsfElectronIDs:mvaEleID-RunIIIWinter22-iso-V1-wp90") == 1)){
+      promptElectronIdx = electronIdx;
+    }
   }
 
   //GenJet_jetIdx vector maker
@@ -429,6 +486,8 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
 
   // Jet
   for (const auto &jet : *jets) {
+
+
     jetIdx++;
     Jet_pt.push_back(jet.pt());
     Jet_eta.push_back(jet.eta());
@@ -442,7 +501,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     Jet_muEF.push_back(jet.muonEnergyFraction());
     
     Jet_muonMultiplicity.push_back(jet.muonMultiplicity());
-    
+    Jet_btagPNetB.push_back(jet.bDiscriminator("pfParticleNetFromMiniAODAK4PuppiCentralJetTags:probb"));
     //Jet ID 0:Loose 1:Tight 2:Tight Lepton Veto
     if (std::fabs(jet.eta()) <= 2.6) {
       if ((jet.neutralHadronEnergyFraction() < 0.99) && (jet.neutralEmEnergyFraction() < 0.9) && (jet.nConstituents() > 1) && (jet.chargedHadronEnergyFraction() > 0.01) && (jet.chargedMultiplicity() > 0)) {
@@ -536,6 +595,23 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
     
     Jet_genJetIdx.push_back(genJetIndex);
+
+    //overlap with dR < 0.4
+    double dR = 999.0;
+
+    if (promptElectronIdx != -1){
+      dR = reco::deltaR((*electrons)[promptElectronIdx], jet);
+    }
+    if (promptMuonIdx != -1){
+      dR = reco::deltaR((*muons)[promptMuonIdx], jet);
+    }
+    
+    if (dR < 0.4) {
+      Jet_Overlap.push_back(1);
+    } else {
+      Jet_Overlap.push_back(0);
+    }
+
   }
 
   //PackedGenPart
@@ -548,7 +624,6 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     PackedGenPart_phi.push_back(packedGenPart.phi());
     PackedGenPart_mass.push_back(packedGenPart.mass());
     PackedGenPart_energy.push_back(packedGenPart.energy());
-
   }
 
   //GenPart
@@ -608,7 +683,9 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
       OneGenJet_packedGenMuonIdx.push_back(-2);
     }
     GenJet_packedGenMuonIdx.push_back(OneGenJet_packedGenMuonIdx);
+
   }
+
   EventNumber = iEvent.id().event();
   GenWeight = generator->weight();
   tree->Fill();
@@ -626,6 +703,7 @@ void muonJet::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("packedMuons", edm::InputTag("packedMuons"));
   desc.add<edm::InputTag>("muons", edm::InputTag("muons"));
+  desc.add<edm::InputTag>("electrons", edm::InputTag("electrons"));
   desc.add<edm::InputTag>("jets", edm::InputTag("jets"));
   desc.add<edm::InputTag>("packedGenParticles", edm::InputTag("packedGenParticles"));
   desc.add<edm::InputTag>("genParticles", edm::InputTag("genParticles"));
