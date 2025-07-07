@@ -2,6 +2,7 @@
 #include <mutex>
 #include <array>
 #include <iostream>
+#include <functional>
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
@@ -101,7 +102,7 @@ private:
   std::vector<int> Jet_muonMultiplicity;
   std::vector<int> Jet_ID;
   std::vector<float> Jet_btagPNetB;
-  std::vector<bool> Jet_Overlap;
+  std::vector<bool> Jet_overlap;
 
   std::vector<double> PackedGenPart_pdgId;
   std::vector<short> PackedGenPart_charge;
@@ -133,6 +134,9 @@ private:
   std::vector<int> OneGenJet_packedGenMuonIdx;
   std::vector<int> GenJet_jetIdx;
   std::vector<int> GenJet_muonMultiplicity;
+  std::vector<bool> GenJet_overlap;
+
+  std::function<void(const reco::Candidate* , const std::vector<reco::GenParticle>*)> traceLeptonDecay;
 
 };
 
@@ -207,7 +211,7 @@ void muonJet::beginJob() {
   tree->Branch("Jet_muonMultiplicity", &Jet_muonMultiplicity);
   tree->Branch("Jet_ID", &Jet_ID);
   tree->Branch("Jet_btagPNetB", &Jet_btagPNetB);
-  tree->Branch("Jet_Overlap", &Jet_Overlap);
+  tree->Branch("Jet_overlap", &Jet_overlap);
 
   tree->Branch("PackedGenPart_pdgId", &PackedGenPart_pdgId);
   tree->Branch("PackedGenPart_charge", &PackedGenPart_charge);
@@ -238,7 +242,7 @@ void muonJet::beginJob() {
   tree->Branch("GenJet_jetIdx", &GenJet_jetIdx);
   tree->Branch("GenJet_packedGenMuonIdx", &GenJet_packedGenMuonIdx);
   tree->Branch("GenJet_muonMultiplicity", &GenJet_muonMultiplicity);
-
+  tree->Branch("GenJet_overlap", &GenJet_overlap);
 }
 
 
@@ -309,7 +313,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   Jet_muonMultiplicity.clear();
   Jet_ID.clear();
   Jet_btagPNetB.clear();
-  Jet_Overlap.clear();
+  Jet_overlap.clear();
 
   PackedGenPart_pdgId.clear();
   PackedGenPart_charge.clear();
@@ -340,6 +344,7 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   GenJet_packedGenMuonIdx.clear();
   GenJet_muonMultiplicity.clear();
   GenJet_jetIdx.clear();
+  GenJet_overlap.clear();
 
   PackedMuon_muonIdx.reserve(packedMuons->size());
   std::vector<bool> muonTaken(muons->size(), false);
@@ -607,9 +612,9 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
     
     if (dR < 0.4) {
-      Jet_Overlap.push_back(1);
+      Jet_overlap.push_back(1);
     } else {
-      Jet_Overlap.push_back(0);
+      Jet_overlap.push_back(0);
     }
 
   }
@@ -627,7 +632,57 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
   }
 
   //GenPart
+  std::vector<int> idx_fromBoson;
+
+  auto isFinalStateLepton = [](const reco::Candidate* p) {
+    int absId = std::abs(p->pdgId());
+    return (p->status() == 1) && (absId == 11 || absId == 13); // e, mu only
+  };
+
+  traceLeptonDecay = [&](const reco::Candidate* lep, const std::vector<reco::GenParticle>* genParticles) {
+    for (unsigned int i = 0; i < lep->numberOfDaughters(); ++i) {
+      const reco::Candidate* dau = lep->daughter(i);
+      if (!dau) continue;
+      int absId = std::abs(dau->pdgId());
+      if (isFinalStateLepton(dau)) {
+        for (size_t j = 0; j < genParticles->size(); ++j) {
+          if (&(*genParticles)[j] == dau) {
+            idx_fromBoson.push_back(j);
+            break;
+          }
+        }
+      } else if ((absId == 11) || (absId == 13) || (absId == 15)) {
+        traceLeptonDecay(dau, genParticles);
+      } else {
+      }
+    }
+  };
+
+
+
   for (const auto& genPart : *genParticles) {
+    int pdgId = std::abs(genPart.pdgId());
+
+    if (pdgId == 23 || pdgId == 24) { // Z or W
+      for (unsigned int i = 0; i < genPart.numberOfDaughters(); ++i) {
+        const reco::Candidate* dau = genPart.daughter(i);
+        if (!dau) continue;
+
+        int dauId = std::abs(dau->pdgId());
+        if ((dauId == 11 || dauId == 13) && (dau->status() == 1)) {
+          int idx_genPart = -1;
+          for (const auto& p : *genParticles) {
+            idx_genPart++;
+            if (&p == dau) {
+              idx_fromBoson.push_back(idx_genPart);
+              break;
+            }
+          }
+        } else if ((dauId == 11) || (dauId == 13) || (dauId == 15)) {
+          traceLeptonDecay(dau, &(*genParticles));
+        }
+      }
+    }
     if (!(std::fabs(genPart.pdgId()) == 13)) continue; 
     GenPart_pdgId.push_back(genPart.pdgId());
     GenPart_charge.push_back(genPart.charge());
@@ -636,8 +691,9 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     GenPart_phi.push_back(genPart.phi());
     GenPart_mass.push_back(genPart.mass());
     GenPart_energy.push_back(genPart.energy());
-  }
 
+  }
+  
   //GenJet
   for (const auto &genJet : *genJets) {
     GenJet_pt.push_back(genJet.pt());
@@ -684,13 +740,26 @@ void muonJet::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     }
     GenJet_packedGenMuonIdx.push_back(OneGenJet_packedGenMuonIdx);
 
+    double dR_min = 999.0;
+
+    for (int idx : idx_fromBoson) {
+      const auto& lepton = (*genParticles)[idx];
+      double dR = reco::deltaR(lepton, genJet);
+      if (dR < dR_min) dR_min = dR;
+    }
+
+    if (dR_min < 0.4) {
+      GenJet_overlap.push_back(1);
+    } else {
+      GenJet_overlap.push_back(0);
+    }
+
   }
 
   EventNumber = iEvent.id().event();
   GenWeight = generator->weight();
   tree->Fill();
 }
-
 
 // ------------ method called once each job just after ending the event loop  ------------
 void muonJet::endJob() {

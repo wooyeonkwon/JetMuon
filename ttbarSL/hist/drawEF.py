@@ -33,7 +33,8 @@ canvas_lock = threading.Lock()
 DIR_NAMES = [[]]   # set directory of the root file, if no directory : []
 TREE_NAMES = ["JetTree"]    # set tree path of the root file, you can use multiple trees.
 BRANCHES = [ # see details at Profile1D_def in the module interface/root_tool.py
-    {"output": "Jet_EnergyFraction_eta", "name": "Jet_eta", "title" : "", "bins": 60, "xmin": -3.0, "xmax": 3.0, "xtitle": "Jet_eta", "ytitle": "energy fraction", "condition": None},
+    {"output": "gen_Jet_EnergyFraction_eta", "name": "Jet_eta", "title" : "", "bins": 60, "xmin": -3.0, "xmax": 3.0, "xtitle": "Jet_eta", "ytitle": "energy fraction", "condition": None},
+#    {"output": "gen_Jet_EnergyFraction_pt", "name": "Jet_pt", "title" : "", "bins": 270, "xmin": 30.0, "xmax": 300.0, "xtitle": "Jet_pt", "ytitle": "energy fraction", "condition": None},
 ]
 
 ################################################################

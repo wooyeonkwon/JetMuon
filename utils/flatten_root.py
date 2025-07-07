@@ -5,11 +5,11 @@ ROOT.EnableThreadSafety()
 ROOT.EnableImplicitMT(255)
 
 # 입력 ROOT 파일과 TTree 로드
-input_file = ROOT.TFile.Open("/data1/users/dndus0107/skimmed_data/WWtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/WWtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8_1.root")
+input_file = ROOT.TFile.Open("/data1/users/dndus0107/skimmed_data/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8/TTtoLNu2Q_TuneCP5_13p6TeV_powheg-pythia8_4.root")
 input_tree = input_file.Get("muonJet/Events")
 
 # 출력 ROOT 파일과 TTree 생성
-output_file = ROOT.TFile("gen_WW_flattened.root", "RECREATE")
+output_file = ROOT.TFile("gen_TT_flattened.root", "RECREATE")
 output_tree = ROOT.TTree("JetTree", "Flattened Jet Tree")
 
 # Jet 속성에 해당하는 변수 정의
@@ -26,7 +26,7 @@ jet_muEF = array('f', [0.])
 #jet_genJetIdx = array('i', [0])
 #jet_muonMultiplicity = array('i', [0])
 #jet_ID = array('i', [0])
-jet_btagPNetB = array('f', [0.])
+#jet_btagPNetB = array('f', [0.])
 
 # 브랜치 생성
 output_tree.Branch("Jet_pt", jet_pt, "Jet_pt/D")
@@ -42,7 +42,7 @@ output_tree.Branch("Jet_muEF", jet_muEF, "Jet_muEF/F")
 #output_tree.Branch("Jet_genJetIdx", jet_genJetIdx, "Jet_genJetIdx/I")
 #output_tree.Branch("Jet_muonMultiplicity", jet_muonMultiplicity, "Jet_muonMultiplicity/I")
 #output_tree.Branch("Jet_ID", jet_ID, "Jet_ID/I")
-output_tree.Branch("Jet_btagPNetB", jet_btagPNetB, "Jet_btagPNetB/F")
+#output_tree.Branch("Jet_btagPNetB", jet_btagPNetB, "Jet_btagPNetB/F")
 
 # 이벤트 루프를 통해 각 Jet의 속성을 추출하여 새로운 TTree에 저장
 for event in input_tree:
@@ -63,7 +63,7 @@ for event in input_tree:
             continue
         if (abs(event.Jet_eta[jet_idx]) >= 3.0):
             continue
-        if (event.Jet_Overlap[jet_idx] == 1):
+        if (event.GenJet_overlap[idx] == 1):
             continue
 
 
